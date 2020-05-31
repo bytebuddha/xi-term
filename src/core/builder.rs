@@ -1,20 +1,20 @@
 use futures::sync::mpsc::{ unbounded, UnboundedSender, UnboundedReceiver };
 use xrl::{ Client, FrontendBuilder };
 
-use super::{ TuiService, CoreEvent };
+use super::{ XiTermService, CoreEvent };
 
-pub struct TuiServiceBuilder(UnboundedSender<CoreEvent>);
+pub struct XiTermServiceBuilder(UnboundedSender<CoreEvent>);
 
-impl TuiServiceBuilder {
+impl XiTermServiceBuilder {
     pub fn new() -> (Self, UnboundedReceiver<CoreEvent>) {
         let (tx, rx) = unbounded();
-        (TuiServiceBuilder(tx), rx)
+        (XiTermServiceBuilder(tx), rx)
     }
 }
 
-impl FrontendBuilder for TuiServiceBuilder {
-    type Frontend = TuiService;
+impl FrontendBuilder for XiTermServiceBuilder {
+    type Frontend = XiTermService;
     fn build(self, _client: Client) -> Self::Frontend {
-        TuiService(self.0)
+        XiTermService(self.0)
     }
 }

@@ -29,7 +29,7 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use xrl::spawn;
 
-use core::{Tui, TuiServiceBuilder};
+use core::{XiTerm, XiTermServiceBuilder};
 
 fn configure_logs(logfile: &str) {
     let tui = FileAppender::builder().build(logfile).unwrap();
@@ -95,7 +95,7 @@ fn run() -> Result<(), Error> {
 
     tokio::run(future::lazy(move || {
         info!("starting xi-core");
-        let (tui_service_builder, core_events_rx) = TuiServiceBuilder::new();
+        let (tui_service_builder, core_events_rx) = XiTermServiceBuilder::new();
         let (client, core_stderr) = spawn(
             matches.value_of("core").unwrap_or("xi-core"),
             tui_service_builder,
@@ -122,7 +122,7 @@ fn run() -> Result<(), Error> {
                 .map_err(|e| error!("failed to send \"client_started\" {:?}", e))
                 .and_then(move |_| {
                     info!("initializing the TUI");
-                    let mut tui = Tui::new(client_clone, core_events_rx)
+                    let mut tui = XiTerm::new(client_clone, core_events_rx)
                         .expect("failed to initialize the TUI");
                     tui.editor.new_view(
                         matches.value_of("file").map(ToString::to_string),

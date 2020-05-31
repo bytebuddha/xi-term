@@ -12,7 +12,7 @@ use failure::Error;
 use core::{Terminal, TerminalEvent};
 use components::Editor;
 
-pub struct Tui {
+pub struct XiTerm {
     /// The editor holds the text buffers (named "views" in xi
     /// terminology).
     pub editor: Editor,
@@ -28,10 +28,10 @@ pub struct Tui {
     core_events: UnboundedReceiver<CoreEvent>,
 }
 
-impl Tui {
+impl XiTerm {
     /// Create a new Tui instance.
     pub fn new(client: Client, events: UnboundedReceiver<CoreEvent>) -> Result<Self, Error> {
-        Ok(Tui {
+        Ok(XiTerm {
             terminal: Terminal::new()?,
             exit: false,
             editor: Editor::new(client),
@@ -140,7 +140,7 @@ impl Tui {
     }
 }
 
-impl Future for Tui {
+impl Future for XiTerm {
     type Item = ();
     type Error = io::Error;
 
@@ -177,9 +177,9 @@ pub enum CoreEvent {
     MeasureWidth((MeasureWidth, Sender<Vec<Vec<f32>>>)),
 }
 
-pub struct TuiService(pub UnboundedSender<CoreEvent>);
+pub struct XiTermService(pub UnboundedSender<CoreEvent>);
 
-impl Frontend for TuiService {
+impl Frontend for XiTermService {
     type NotificationResult = Result<(), ()>;
     fn handle_notification(&mut self, notification: XiNotification) -> Self::NotificationResult {
         self.0.start_send(CoreEvent::Notify(notification)).unwrap();
