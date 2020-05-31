@@ -10,7 +10,7 @@ use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 use failure::Error;
 
 use core::{Terminal, TerminalEvent};
-use widgets::Editor;
+use components::Editor;
 
 pub struct Tui {
     /// The editor holds the text buffers (named "views" in xi

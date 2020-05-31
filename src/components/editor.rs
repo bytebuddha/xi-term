@@ -10,7 +10,7 @@ use termion::event::Event as TermionEvent;
 use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
 use core::CoreEvent;
-use widgets::{View, ViewClient};
+use components::{View, ViewClient};
 
 /// The main interface to xi-core
 pub struct Editor {

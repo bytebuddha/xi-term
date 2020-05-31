@@ -19,7 +19,7 @@ extern crate xdg;
 extern crate xrl;
 
 mod core;
-mod widgets;
+mod components;
 use xdg::BaseDirectories;
 
 use failure::Error;
