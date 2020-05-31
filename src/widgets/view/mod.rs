@@ -1,4 +1,3 @@
-mod cfg;
 mod client;
 mod style;
 #[allow(clippy::module_inception)]

@@ -29,7 +29,7 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Logger, Root};
 use xrl::spawn;
 
-use core::{Command, Tui, TuiServiceBuilder};
+use core::{Tui, TuiServiceBuilder};
 
 fn configure_logs(logfile: &str) {
     let tui = FileAppender::builder().build(logfile).unwrap();
@@ -124,10 +124,9 @@ fn run() -> Result<(), Error> {
                     info!("initializing the TUI");
                     let mut tui = Tui::new(client_clone, core_events_rx)
                         .expect("failed to initialize the TUI");
-                    tui.run_command(Command::Open(
+                    tui.editor.new_view(
                         matches.value_of("file").map(ToString::to_string),
-                    ));
-                    tui.run_command(Command::SetTheme("base16-eighties.dark".into()));
+                    );
                     tui.map_err(|e| error!("TUI exited with an error: {:?}", e))
                 })
         }));

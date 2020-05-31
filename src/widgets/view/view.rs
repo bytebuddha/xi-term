@@ -1,14 +1,12 @@
-use std::cmp::max;
 use std::collections::HashMap;
 use std::io::Write;
 
 use failure::Error;
 use termion::clear::CurrentLine as ClearLine;
 use termion::cursor::Goto;
-use termion::event::{Event, Key, MouseButton, MouseEvent};
-use xrl::{ConfigChanges, Line, LineCache, Style, Update};
+use termion::event::{Event, Key};
+use xrl::{Line, LineCache, Style, Update};
 
-use super::cfg::ViewConfig;
 use super::client::Client;
 use super::style::{reset_style, set_style};
 use super::window::Window;
@@ -23,20 +21,16 @@ pub struct View {
     cache: LineCache,
     cursor: Cursor,
     window: Window,
-    file: Option<String>,
-    client: Client,
-    cfg: ViewConfig,
+    client: Client
 }
 
 impl View {
-    pub fn new(client: Client, file: Option<String>) -> View {
+    pub fn new(client: Client) -> View {
         View {
             cache: LineCache::default(),
             cursor: Default::default(),
             window: Window::new(),
-            cfg: ViewConfig::default(),
-            client,
-            file,
+            client
         }
     }
 
@@ -48,12 +42,6 @@ impl View {
     pub fn set_cursor(&mut self, line: u64, column: u64) {
         self.cursor = Cursor { line, column };
         self.window.set_cursor(&self.cursor);
-    }
-
-    pub fn config_changed(&mut self, changes: ConfigChanges) {
-        if let Some(tab_size) = changes.tab_size {
-            self.cfg.tab_size = tab_size as u16;
-        }
     }
 
     pub fn render<W: Write>(
@@ -87,46 +75,6 @@ impl View {
         self.client.insert_tab()
     }
 
-    pub fn save(&mut self) {
-        self.client.save(self.file.as_ref().unwrap())
-    }
-
-    pub fn back(&mut self) {
-        self.client.backspace()
-    }
-
-    pub fn delete(&mut self) {
-        self.client.delete()
-    }
-
-    pub fn page_down(&mut self) {
-        self.client.page_down()
-    }
-
-    pub fn page_up(&mut self) {
-        self.client.page_up()
-    }
-
-    pub fn move_left(&mut self) {
-        self.client.left()
-    }
-
-    pub fn move_right(&mut self) {
-        self.client.right()
-    }
-
-    pub fn move_up(&mut self) {
-        self.client.up()
-    }
-
-    pub fn move_down(&mut self) {
-        self.client.down()
-    }
-
-    pub fn toggle_line_numbers(&mut self) {
-        self.cfg.display_gutter = !self.cfg.display_gutter;
-    }
-
     fn update_window(&mut self) {
         if self.cursor.line < self.cache.before() {
             error!(
@@ -138,53 +86,7 @@ impl View {
         }
         let cursor_line = self.cursor.line - self.cache.before();
         let nb_lines = self.cache.lines().len() as u64;
-        let gutter_size = (self.cache.before() + nb_lines + self.cache.after())
-            .to_string()
-            .len() as u16;
-        let gutter_size = gutter_size + 1; // Space between line number and content
-        self.cfg.gutter_size = max(gutter_size, 4); //  min gutter width 4
         self.window.update(cursor_line, nb_lines);
-    }
-
-    fn get_click_location(&self, x: u64, y: u64) -> (u64, u64) {
-        let lineno = x + self.cache.before() + self.window.start();
-        if let Some(line) = self.cache.lines().get(x as usize) {
-            if y < u64::from(self.cfg.gutter_size) {
-                return (lineno, 0);
-            }
-            let mut text_len: u16 = 0;
-            for (idx, c) in line.text.chars().enumerate() {
-                let char_width = self.translate_char_width(text_len, c);
-                text_len += char_width;
-                if u64::from(text_len) >= y {
-                    // If the character at idx is wider than one column,
-                    // the click occurred within the character. Otherwise,
-                    // the click occurred on the character at idx + 1
-                    if char_width > 1 {
-                        return (lineno as u64, (idx - self.cfg.gutter_size as usize) as u64);
-                    } else {
-                        return (
-                            lineno as u64,
-                            (idx - self.cfg.gutter_size as usize) as u64 + 1,
-                        );
-                    }
-                }
-            }
-            return (lineno, line.text.len() as u64 + 1);
-        } else {
-            warn!("no line at index {} found in cache", x);
-            return (x, y);
-        }
-    }
-
-    fn click(&mut self, x: u64, y: u64) {
-        let (line, column) = self.get_click_location(x, y);
-        self.client.click(line, column);
-    }
-
-    fn drag(&mut self, x: u64, y: u64) {
-        let (line, column) = self.get_click_location(x, y);
-        self.client.drag(line, column);
     }
 
     pub fn handle_input(&mut self, event: Event) {
@@ -196,31 +98,20 @@ impl View {
                     _ => self.insert(c),
                 },
                 Key::Ctrl(c) => match c {
-                    'w' => self.save(),
-                    'h' => self.back(),
+                    'h' => self.client.backspace(),
                     _ => error!("un-handled input ctrl+{}", c),
                 },
-                Key::Backspace => self.back(),
-                Key::Delete => self.delete(),
+                Key::Backspace => self.client.backspace(),
+                Key::Delete => self.client.delete(),
                 Key::Left => self.client.left(),
                 Key::Right => self.client.right(),
                 Key::Up => self.client.up(),
                 Key::Down => self.client.down(),
                 Key::Home => self.client.home(),
                 Key::End => self.client.end(),
-                Key::PageUp => self.page_up(),
-                Key::PageDown => self.page_down(),
+                Key::PageUp => self.client.page_up(),
+                Key::PageDown => self.client.page_down(),
                 k => error!("un-handled key {:?}", k),
-            },
-            Event::Mouse(mouse_event) => match mouse_event {
-                MouseEvent::Press(press_event, y, x) => match press_event {
-                    MouseButton::Left => self.click(u64::from(x) - 1, u64::from(y) - 1),
-                    MouseButton::WheelUp => self.client.up(),
-                    MouseButton::WheelDown => self.client.down(),
-                    button => error!("un-handled button {:?}", button),
-                },
-                MouseEvent::Release(..) => {}
-                MouseEvent::Hold(y, x) => self.drag(u64::from(x) - 1, u64::from(y) - 1),
             },
             ev => error!("un-handled event {:?}", ev),
         }
@@ -240,10 +131,8 @@ impl View {
 
         // Draw the valid lines within this range
         let mut line_strings = String::new();
-        let mut line_no = self.cache.before() + self.window.start();
         for (line_index, line) in lines.enumerate() {
-            line_strings.push_str(&self.render_line_str(line, Some(line_no), line_index, styles));
-            line_no += 1;
+            line_strings.push_str(&self.render_line_str(line, line_index, styles));
         }
 
         // If the number of lines is less than window height
@@ -254,7 +143,6 @@ impl View {
             for num in line_count..win_size {
                 line_strings.push_str(&self.render_line_str(
                     &Line::default(),
-                    None,
                     num as usize,
                     styles,
                 ));
@@ -267,40 +155,22 @@ impl View {
 
     // Next tab stop, assuming 0-based indexing
     fn tab_width_at_position(&self, position: u16) -> u16 {
-        self.cfg.tab_size - (position % self.cfg.tab_size)
+        4 - (position % 4)
     }
 
     fn render_line_str(
         &self,
         line: &Line,
-        lineno: Option<u64>,
         line_index: usize,
         styles: &HashMap<u64, Style>,
     ) -> String {
         let text = self.escape_control_and_add_styles(styles, line);
-        if let Some(line_no) = lineno {
-            if self.cfg.display_gutter {
-                let line_no = (line_no + 1).to_string();
-                let line_no_offset = self.cfg.gutter_size - line_no.len() as u16;
-                format!(
-                    "{}{}{}{}{}",
-                    Goto(line_no_offset, line_index as u16 + 1),
-                    ClearLine,
-                    line_no,
-                    Goto(self.cfg.gutter_size + 1, line_index as u16 + 1),
-                    &text
-                )
-            } else {
-                format!("{}{}{}", Goto(0, line_index as u16 + 1), ClearLine, &text)
-            }
-        } else {
-            format!(
-                "{}{}{}",
-                Goto(self.cfg.gutter_size + 1, line_index as u16 + 1),
-                ClearLine,
-                &text
-            )
-        }
+        format!(
+            "{}{}{}",
+            Goto(0, line_index as u16 + 1),
+            ClearLine,
+            &text
+        )
     }
 
     fn escape_control_and_add_styles(&self, styles: &HashMap<u64, Style>, line: &Line) -> String {
@@ -350,10 +220,10 @@ impl View {
         let mut prev_style_end: usize = 0;
         for style_def in &line.styles {
             let start_idx = if style_def.offset >= 0 {
-                (prev_style_end + style_def.offset as usize)
+                prev_style_end + style_def.offset as usize
             } else {
                 // FIXME: does that actually work?
-                (prev_style_end - ((-style_def.offset) as usize))
+                prev_style_end - ((-style_def.offset) as usize)
             };
             let end_idx = start_idx + style_def.length as usize;
             prev_style_end = end_idx;
@@ -445,7 +315,7 @@ impl View {
             .fold(0, |acc, c| acc + self.translate_char_width(acc, c));
 
         // Draw the cursor
-        let cursor_pos = Goto(self.cfg.gutter_size + column + 1, line_pos as u16 + 1);
+        let cursor_pos = Goto(column + 1, line_pos as u16 + 1);
         if let Err(e) = write!(w, "{}", cursor_pos) {
             error!("failed to render cursor: {}", e);
         }

@@ -1,31 +1,25 @@
 use std::io::{self, Write};
 
-use futures::sync::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
+use futures::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::sync::oneshot::{self, Receiver, Sender};
 use futures::{Async, Future, Poll, Sink, Stream};
 
 use termion::event::{Event, Key};
-use xrl::{Client, Frontend, FrontendBuilder, MeasureWidth, XiNotification};
+use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
 
-use core::{Command, Terminal, TerminalEvent};
-use widgets::{CommandPrompt, Editor};
+use core::{Terminal, TerminalEvent};
+use widgets::Editor;
 
 pub struct Tui {
     /// The editor holds the text buffers (named "views" in xi
     /// terminology).
-    editor: Editor,
-
-    /// The command prompt is where users can type commands.
-    prompt: Option<CommandPrompt>,
+    pub editor: Editor,
 
     /// The terminal is used to draw on the screen a get inputs from
     /// the user.
     terminal: Terminal,
-
-    /// The size of the terminal.
-    term_size: (u16, u16),
 
     /// Whether the editor is shutting down.
     exit: bool,
@@ -40,39 +34,13 @@ impl Tui {
         Ok(Tui {
             terminal: Terminal::new()?,
             exit: false,
-            term_size: (0, 0),
             editor: Editor::new(client),
-            prompt: None,
             core_events: events,
         })
     }
 
     fn handle_resize(&mut self, size: (u16, u16)) {
-        self.term_size = size;
         self.editor.handle_resize(size);
-    }
-
-    pub fn run_command(&mut self, cmd: Command) {
-        match cmd {
-            Command::Cancel => {
-                self.prompt = None;
-            }
-            Command::Quit => self.exit = true,
-            Command::Save(view) => self.editor.save(view),
-            Command::Back => self.editor.back(),
-            Command::Delete => self.editor.delete(),
-            Command::Open(file) => self.editor.new_view(file),
-            Command::SetTheme(theme) => self.editor.set_theme(&theme),
-            Command::NextBuffer => self.editor.next_buffer(),
-            Command::PrevBuffer => self.editor.prev_buffer(),
-            Command::MoveLeft => self.editor.move_left(),
-            Command::MoveRight => self.editor.move_right(),
-            Command::MoveUp => self.editor.move_up(),
-            Command::MoveDown => self.editor.move_down(),
-            Command::PageDown => self.editor.page_down(),
-            Command::PageUp => self.editor.page_up(),
-            Command::ToggleLineNumbers => self.editor.toggle_line_numbers(),
-        }
     }
 
     /// Global keybindings can be parsed here
@@ -80,45 +48,15 @@ impl Tui {
         debug!("handling input {:?}", event);
         match event {
             Event::Key(Key::Ctrl('c')) => self.exit = true,
-            Event::Key(Key::Alt('x')) => {
-                if let Some(ref mut prompt) = self.prompt {
-                    match prompt.handle_input(&event) {
-                        Ok(None) => {}
-                        Ok(Some(_)) => unreachable!(),
-                        Err(_) => unreachable!(),
-                    }
-                } else {
-                    self.prompt = Some(CommandPrompt::default());
-                }
-            }
             event => {
-                // No command prompt is active, process the event normally.
-                if self.prompt.is_none() {
-                    self.editor.handle_input(event);
-                    return;
-                }
-
-                // A command prompt is active.
-                let mut prompt = self.prompt.take().unwrap();
-                match prompt.handle_input(&event) {
-                    Ok(None) => {
-                        self.prompt = Some(prompt);
-                    }
-                    Ok(Some(cmd)) => self.run_command(cmd),
-                    Err(err) => {
-                        error!("Failed to parse command: {:?}", err);
-                    }
-                }
+                self.editor.handle_input(event);
+                return;
             }
         }
     }
 
     fn render(&mut self) -> Result<(), Error> {
-        if let Some(ref mut prompt) = self.prompt {
-            prompt.render(self.terminal.stdout(), self.term_size.1)?;
-        } else {
-            self.editor.render(self.terminal.stdout())?;
-        }
+        self.editor.render(self.terminal.stdout())?;
         if let Err(e) = self.terminal.stdout().flush() {
             error!("failed to flush stdout: {}", e);
         }
@@ -239,7 +177,7 @@ pub enum CoreEvent {
     MeasureWidth((MeasureWidth, Sender<Vec<Vec<f32>>>)),
 }
 
-pub struct TuiService(UnboundedSender<CoreEvent>);
+pub struct TuiService(pub UnboundedSender<CoreEvent>);
 
 impl Frontend for TuiService {
     type NotificationResult = Result<(), ()>;
@@ -272,21 +210,5 @@ impl<T> Future for NoErrorReceiver<T> {
     type Error = ();
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.0.poll().map_err(|_cancelled| ())
-    }
-}
-
-pub struct TuiServiceBuilder(UnboundedSender<CoreEvent>);
-
-impl TuiServiceBuilder {
-    pub fn new() -> (Self, UnboundedReceiver<CoreEvent>) {
-        let (tx, rx) = unbounded();
-        (TuiServiceBuilder(tx), rx)
-    }
-}
-
-impl FrontendBuilder for TuiServiceBuilder {
-    type Frontend = TuiService;
-    fn build(self, _client: Client) -> Self::Frontend {
-        TuiService(self.0)
     }
 }

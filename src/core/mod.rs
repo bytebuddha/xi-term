@@ -1,8 +1,8 @@
 mod terminal;
-pub use self::terminal::{RenderTarget, Terminal, TerminalEvent};
+pub use self::terminal::{Terminal, TerminalEvent};
 
 mod tui;
-pub use self::tui::{CoreEvent, Tui, TuiService, TuiServiceBuilder};
+pub use self::tui::{CoreEvent, Tui, TuiService};
 
-mod cmd;
-pub use self::cmd::{Command, ParseCommandError};
+mod builder;
+pub use self::builder::TuiServiceBuilder;

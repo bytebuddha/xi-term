@@ -7,7 +7,7 @@ use futures::{Async, Future, Poll, Stream};
 use failure::Error;
 use indexmap::IndexMap;
 use termion::event::Event as TermionEvent;
-use xrl::{Client, ConfigChanged, ScrollTo, Style, Update, ViewId, XiNotification};
+use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
 use core::CoreEvent;
 use widgets::{View, ViewClient};
@@ -89,10 +89,10 @@ impl Future for Editor {
         debug!("polling 'new_view' responses");
         loop {
             match self.new_view_rx.poll() {
-                Ok(Async::Ready(Some((view_id, file_path)))) => {
+                Ok(Async::Ready(Some((view_id, _file_path)))) => {
                     info!("creating new view {:?}", view_id);
                     let client = ViewClient::new(self.client.clone(), view_id);
-                    let mut view = View::new(client, file_path);
+                    let mut view = View::new(client);
                     view.resize(self.size.1);
                     self.views.insert(view_id, view);
                     info!("switching to view {:?}", view_id);
@@ -140,7 +140,6 @@ impl Editor {
                 XiNotification::Update(update) => self.update(update),
                 XiNotification::DefStyle(style) => self.def_style(style),
                 XiNotification::ScrollTo(scroll_to) => self.scroll_to(scroll_to),
-                XiNotification::ConfigChanged(config) => self.config_changed(config),
                 _ => info!("ignoring Xi core notification: {:?}", notification),
             },
             CoreEvent::MeasureWidth((_request, _result_tx)) => unimplemented!(),
@@ -172,16 +171,6 @@ impl Editor {
         self.styles.insert(style.id, style);
     }
 
-    /// Handle a "config_changed" notification from Xi core.
-    fn config_changed(&mut self, config: ConfigChanged) {
-        match self.views.get_mut(&config.view_id) {
-            Some(view) => view.config_changed(config.changes),
-            None => self
-                .delayed_events
-                .push(CoreEvent::Notify(XiNotification::ConfigChanged(config))),
-        }
-    }
-
     /// Spawn a future that sends a "new_view" request to the core,
     /// and forwards the response back to the `Editor`.
     pub fn new_view(&mut self, file_path: Option<String>) {
@@ -202,98 +191,6 @@ impl Editor {
                 Ok(())
             });
         tokio::spawn(future);
-    }
-
-    /// Spawn a future that sends a "set_theme" notification to the
-    /// core for the current view.
-    pub fn set_theme(&mut self, theme: &str) {
-        tokio::spawn(self.client.set_theme(theme).map_err(|_| ()));
-    }
-
-    /// Spawn a future that sends a "save" notification to the core.
-    pub fn save(&mut self, view_id: Option<ViewId>) {
-        match self.views.get_mut(&view_id.unwrap_or(self.current_view)) {
-            Some(view) => view.save(),
-            None => warn!("cannot save view {:?}: not found", &view_id),
-        }
-    }
-
-    pub fn back(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.back();
-        }
-    }
-
-    pub fn delete(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.delete();
-        }
-    }
-
-    pub fn next_buffer(&mut self) {
-        if let Some((dex, _, _)) = self.views.get_full(&self.current_view) {
-            if dex + 1 == self.views.len() {
-                if let Some((view, _)) = self.views.get_index(0) {
-                    self.current_view = *view;
-                }
-            } else if let Some((view, _)) = self.views.get_index(dex + 1) {
-                self.current_view = *view;
-            }
-        }
-    }
-
-    pub fn prev_buffer(&mut self) {
-        if let Some((dex, _, _)) = self.views.get_full(&self.current_view) {
-            if dex == 0 {
-                if let Some((view, _)) = self.views.get_index(self.views.len() - 1) {
-                    self.current_view = *view;
-                }
-            } else if let Some((view, _)) = self.views.get_index(dex - 1) {
-                self.current_view = *view;
-            }
-        }
-    }
-
-    pub fn move_left(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.move_left();
-        }
-    }
-
-    pub fn move_right(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.move_right();
-        }
-    }
-
-    pub fn move_up(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.move_up();
-        }
-    }
-
-    pub fn move_down(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.move_down();
-        }
-    }
-
-    pub fn page_down(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.page_down();
-        }
-    }
-
-    pub fn page_up(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.page_up();
-        }
-    }
-
-    pub fn toggle_line_numbers(&mut self) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.toggle_line_numbers();
-        }
     }
 }
 

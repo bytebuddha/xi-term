@@ -8,14 +8,13 @@ use futures::{Async, Poll, Sink, Stream};
 use failure::{Error, ResultExt};
 
 use termion::event::Event;
-use termion::input::MouseTerminal;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::screen::AlternateScreen;
 use termion::terminal_size;
 
 /// Simple type alias for the Write implementer we render to.
-pub type RenderTarget = MouseTerminal<AlternateScreen<RawTerminal<Stdout>>>;
+pub type RenderTarget = AlternateScreen<RawTerminal<Stdout>>;
 
 pub struct Terminal {
     size: UnboundedReceiver<(u16, u16)>,
@@ -27,11 +26,11 @@ impl Terminal {
     pub fn new() -> Result<Self, Error> {
         let (stdin_tx, stdin_rx) = unbounded();
         let (size_tx, size_rx) = unbounded();
-        let stdout = MouseTerminal::from(AlternateScreen::from(
+        let stdout = AlternateScreen::from(
             io::stdout()
                 .into_raw_mode()
                 .context("Failed to put terminal into raw mode")?,
-        ));
+        );
 
         let term = Terminal {
             stdin: stdin_rx,

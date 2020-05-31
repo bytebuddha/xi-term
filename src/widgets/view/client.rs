@@ -84,22 +84,4 @@ impl Client {
         let f = self.inner.backspace(self.view_id).map_err(|_| ());
         spawn(f);
     }
-
-    pub fn save(&mut self, file: &str) {
-        let f = self.inner.save(self.view_id, file).map_err(|_| ());
-        spawn(f);
-    }
-
-    pub fn click(&mut self, line: u64, column: u64) {
-        let f = self
-            .inner
-            .click_point_select(self.view_id, line, column)
-            .map_err(|_| ());
-        spawn(f);
-    }
-
-    pub fn drag(&mut self, line: u64, column: u64) {
-        let f = self.inner.drag(self.view_id, line, column).map_err(|_| ());
-        spawn(f);
-    }
 }
