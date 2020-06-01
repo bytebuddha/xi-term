@@ -23,6 +23,7 @@ pub mod core;
 pub mod ui;
 pub mod widgets;
 pub mod components;
+pub mod actions;
 
 pub use failure::Error;
 use futures::{future, Future, Stream};
