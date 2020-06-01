@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-use std::io::Write;
-
 use futures::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use futures::{Async, Future, Poll, Stream};
 
-use failure::Error;
 use indexmap::IndexMap;
 use termion::event::Event as TermionEvent;
 use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
@@ -189,23 +186,5 @@ impl Editor {
                 Ok(())
             });
         tokio::spawn(future);
-    }
-}
-
-/// Methods ment to be called by the tui struct
-impl Editor {
-    // We render if:
-    //  - the current view is dirty
-    //  - we switched views
-    //  - the style changed
-    //  - the terminal size changed
-    pub fn render<W: Write>(&mut self, term: &mut W) -> Result<(), Error> {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            debug!("rendering the current view");
-            view.render(term, &self.styles)?;
-        } else {
-            warn!("no view to render");
-        }
-        Ok(())
     }
 }

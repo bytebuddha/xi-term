@@ -1,9 +1,11 @@
-use std::io::{self, Write};
+use std::io::{self, Stdout, stdout};
 
 use futures::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::sync::oneshot::{self, Receiver, Sender};
 use futures::{Async, Future, Poll, Sink, Stream};
 
+use tui::backend::TermionBackend;
+use tui::terminal::Terminal as TuiTerminal;
 use termion::event::{Event, Key};
 use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
@@ -20,6 +22,7 @@ pub struct XiTerm {
     /// The terminal is used to draw on the screen a get inputs from
     /// the user.
     terminal: Terminal,
+    term: TuiTerminal<TermionBackend<Stdout>>,
 
     /// Whether the editor is shutting down.
     exit: bool,
@@ -33,6 +36,7 @@ impl XiTerm {
     pub fn new(client: Client, events: UnboundedReceiver<CoreEvent>) -> Result<Self, Error> {
         Ok(XiTerm {
             terminal: Terminal::new()?,
+            term: TuiTerminal::new(TermionBackend::new(stdout()))?,
             exit: false,
             editor: Editor::new(client),
             core_events: events,
@@ -56,10 +60,20 @@ impl XiTerm {
     }
 
     fn render(&mut self) -> Result<(), Error> {
-        self.editor.render(self.terminal.stdout())?;
-        if let Err(e) = self.terminal.stdout().flush() {
-            error!("failed to flush stdout: {}", e);
+
+        let XiTerm { term, editor, .. } = self;
+        term.draw(|mut f| {
+            let editor = crate::widgets::EditorWidget::new(&editor);
+            f.render_widget(editor, f.size());
+        })?;
+        if let Some(view) = editor.views.get(&editor.current_view) {
+            let (x, y) = view.render_cursor();
+            term.set_cursor(x, y)?;
         }
+        // self.editor.render(self.terminal.stdout())?;
+        // if let Err(e) = self.terminal.stdout().flush() {
+        //     error!("failed to flush stdout: {}", e);
+        // }
         Ok(())
     }
 

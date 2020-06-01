@@ -17,7 +17,9 @@ extern crate termion;
 extern crate tokio;
 extern crate xdg;
 extern crate xrl;
+extern crate tui;
 
+mod widgets;
 mod core;
 mod components;
 use xdg::BaseDirectories;

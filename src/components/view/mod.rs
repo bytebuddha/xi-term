@@ -1,5 +1,5 @@
 mod client;
-mod style;
+
 #[allow(clippy::module_inception)]
 mod view;
 mod window;

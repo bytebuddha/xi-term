@@ -19,7 +19,7 @@ pub type RenderTarget = AlternateScreen<RawTerminal<Stdout>>;
 pub struct Terminal {
     size: UnboundedReceiver<(u16, u16)>,
     stdin: UnboundedReceiver<Event>,
-    stdout: RenderTarget,
+    _stdout: RenderTarget,
 }
 
 impl Terminal {
@@ -35,7 +35,7 @@ impl Terminal {
         let term = Terminal {
             stdin: stdin_rx,
             size: size_rx,
-            stdout,
+            _stdout: stdout,
         };
 
         Terminal::start_stdin_listening(stdin_tx);
@@ -86,10 +86,6 @@ impl Terminal {
                 sleep(Duration::from_millis(10));
             }
         });
-    }
-
-    pub fn stdout(&mut self) -> &mut RenderTarget {
-        &mut self.stdout
     }
 }
 
