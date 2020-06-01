@@ -20,54 +20,15 @@ extern crate xrl;
 extern crate tui;
 
 pub mod core;
+pub mod ui;
 pub mod widgets;
 pub mod components;
-use xdg::BaseDirectories;
 
 pub use failure::Error;
 use futures::{future, Future, Stream};
-use log::LevelFilter;
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Config, Logger, Root};
 use xrl::spawn;
 
-use core::{XiTerm, XiTermServiceBuilder};
-
-pub fn configure_logs(logfile: &str) {
-    use std::panic;
-
-    panic::set_hook(Box::new(|err| {
-        error!("Fatal Crash: {:?}", err);
-    }));
-    let tui = FileAppender::builder().build(logfile).unwrap();
-    let rpc = FileAppender::builder()
-        .build(&format!("{}.rpc", logfile))
-        .unwrap();
-    let config = Config::builder()
-        .appender(Appender::builder().build("tui", Box::new(tui)))
-        .appender(Appender::builder().build("rpc", Box::new(rpc)))
-        .logger(
-            Logger::builder()
-                .appender("tui")
-                .additive(false)
-                .build("xi_tui", LevelFilter::Debug),
-        )
-        .logger(
-            Logger::builder()
-                .appender("tui")
-                .additive(false)
-                .build("xrl", LevelFilter::Info),
-        )
-        .logger(
-            Logger::builder()
-                .appender("rpc")
-                .additive(false)
-                .build("xrl::protocol::codec", LevelFilter::Trace),
-        )
-        .build(Root::builder().appender("tui").build(LevelFilter::Info))
-        .unwrap();
-    let _ = log4rs::init_config(config).unwrap();
-}
+use ui::{XiTerm, XiTermServiceBuilder};
 
 pub fn run() -> Result<(), Error> {
     let xi = clap_app!(
@@ -79,7 +40,7 @@ pub fn run() -> Result<(), Error> {
 
     let matches = xi.get_matches();
     if let Some(logfile) = matches.value_of("logfile") {
-        configure_logs(logfile);
+        core::configure_logs(logfile);
     }
 
     tokio::run(future::lazy(move || {
@@ -101,9 +62,7 @@ pub fn run() -> Result<(), Error> {
         );
 
         tokio::spawn(future::lazy(move || {
-            let conf_dir = BaseDirectories::with_prefix("xi")
-                .ok()
-                .and_then(|dirs| Some(dirs.get_config_home().to_string_lossy().into_owned()));
+            let conf_dir = core::get_config_directory();
 
             let client_clone = client.clone();
             client

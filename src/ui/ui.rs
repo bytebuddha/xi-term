@@ -11,7 +11,7 @@ use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
 
-use core::{Terminal, TerminalEvent};
+use ui::{Terminal, TerminalEvent};
 use components::Editor;
 use widgets::EditorWidget;
 

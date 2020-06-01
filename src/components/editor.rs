@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use crossterm::event::Event as CrosstermEvent;
 use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
-use core::CoreEvent;
+use ui::CoreEvent;
 use components::{View, ViewClient};
 
 /// The main interface to xi-core
