@@ -69,23 +69,21 @@ impl XiTerm {
     fn render(&mut self) -> Result<(), Error> {
 
         let XiTerm { term, editor, .. } = self;
+        let mut rect = None;
         term.draw(|mut f| {
+            let editor_rect = f.size();
             let editor = crate::widgets::EditorWidget::new(&editor);
-            f.render_widget(editor, f.size());
+            f.render_widget(editor, editor_rect);
+            rect = Some(editor_rect);
         })?;
-        if let Some(view) = editor.views.get(&editor.current_view) {
-            let (x, y) = view.render_cursor();
-            term.set_cursor(x, y)?;
+        if let Some(size) = rect {
+            if let Some(view) = editor.views.get(&editor.current_view) {
+                if let Some(cursor) = view.render_cursor(size) {
+                    term.set_cursor(cursor.0, cursor.1)?;
+                }
+            }
         }
-        // self.editor.render(self.terminal.stdout())?;
-        // if let Err(e) = self.terminal.stdout().flush() {
-        //     error!("failed to flush stdout: {}", e);
-        // }
         Ok(())
-    }
-
-    fn handle_core_event(&mut self, event: CoreEvent) {
-        self.editor.handle_core_event(event)
     }
 
     fn poll_editor(&mut self) {
@@ -140,7 +138,7 @@ impl XiTerm {
         debug!("polling for RPC messages");
         loop {
             match self.core_events.poll() {
-                Ok(Async::Ready(Some(event))) => self.handle_core_event(event),
+                Ok(Async::Ready(Some(event))) => self.editor.handle_core_event(event),
                 Ok(Async::Ready(None)) => {
                     info!("The RPC endpoint exited normally. Shutting down the TUI");
                     self.exit = true;

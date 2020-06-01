@@ -34,6 +34,11 @@ use xrl::spawn;
 use core::{XiTerm, XiTermServiceBuilder};
 
 fn configure_logs(logfile: &str) {
+    use std::panic;
+
+    panic::set_hook(Box::new(|err| {
+        error!("Fatal Crash: {:?}", err);
+    }));
     let tui = FileAppender::builder().build(logfile).unwrap();
     let rpc = FileAppender::builder()
         .build(&format!("{}.rpc", logfile))

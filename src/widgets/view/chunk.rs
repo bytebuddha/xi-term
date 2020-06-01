@@ -69,11 +69,34 @@ impl <'a>Widget for Chunk<'a> {
             style.modifier.contains(Modifier::ITALIC);
         }
 
+        let mut data = String::new();
+        // This Variable is undefined? WTF
+        #[allow(unused_variables)]
+        let mut position: u16 = 0;
+        for chr in self.text.chars() {
+            match chr {
+                '\x00'..='\x08' | '\x0a'..='\x1f' | '\x7f' => {
+                    // Render in caret notation, i.e. '\x02' is rendered as '^B'
+                    data.push('^');
+                    data.push((chr as u8 ^ 0x40u8) as char);
+                    position += 2;
+                }
+                '\t' => {
+                    data.push_str(&" ".repeat(4));
+                    position += 4;
+                }
+                _ => {
+                    data.push(chr);
+                    position += 1;
+                }
+            }
+        }
+
         buf.set_stringn(
             area.x,
             area.y,
-            &self.text,
-            area.width as usize,
+            &data,
+            data.len(),
             style
         );
     }

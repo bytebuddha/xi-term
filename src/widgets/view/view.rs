@@ -26,7 +26,7 @@ impl <'a, 'b>Widget for ViewWidget<'a, 'b> {
             .take(self.view.window.size() as usize);
 
         for (line_index, line) in lines.enumerate() {
-            let line_rect = Rect { x: 0, y: area.y + line_index as u16, width: area.width, height: 1};
+            let line_rect = Rect { x: area.x, y: area.y + line_index as u16, width: area.width, height: 1};
             LineWidget::new(&self.editor, &self.view, Some(line)).render(line_rect, buf);
         }
 
