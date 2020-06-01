@@ -1,10 +1,9 @@
 use tui::layout::Rect;
 use crossterm::event::{Event, KeyCode};
-use xrl::{LineCache, Update};
+use xrl::{LineCache, Update, ConfigChanges};
 
 use actions::{ ViewAction, CursorAction };
-use super::client::Client;
-use super::window::Window;
+use super::{ client::Client, window::Window };
 
 #[derive(Debug, Default)]
 pub struct Cursor {
@@ -16,7 +15,8 @@ pub struct View {
     pub cache: LineCache,
     cursor: Cursor,
     pub window: Window,
-    client: Client
+    client: Client,
+    cfg: Option<ConfigChanges>
 }
 
 impl View {
@@ -25,6 +25,7 @@ impl View {
             cache: LineCache::default(),
             cursor: Default::default(),
             window: Window::new(),
+            cfg: None,
             client
         }
     }
@@ -72,6 +73,10 @@ impl View {
         let cursor_line = self.cursor.line - self.cache.before();
         let nb_lines = self.cache.lines().len() as u64;
         self.window.update(cursor_line, nb_lines);
+    }
+
+    pub fn config_changed(&mut self, changes: ConfigChanges) {
+        self.cfg = Some(changes);
     }
 
     pub fn handle_action(&mut self, action: ViewAction) {
@@ -174,8 +179,18 @@ impl View {
         match c {
             // Caret notation means non-tab control characters are two columns wide
             '\x00'..='\x08' | '\x0a'..='\x1f' | '\x7f' => 2,
-            '\t' => 4 - (position % 4),
+            '\t' => self.get_tab_size(position),
             _ => 1,
         }
+    }
+
+    fn get_tab_size(&self, position: u16) -> u16 {
+        if let Some(cfg) = &self.cfg {
+            if let Some(tab_size) = &cfg.tab_size {
+                let tab_size = *tab_size as u16;
+                return tab_size - (position % tab_size);
+            }
+        }
+        4 - (position % 4)
     }
 }

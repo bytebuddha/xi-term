@@ -4,7 +4,7 @@ use futures::{Async, Future, Poll, Stream};
 
 use indexmap::IndexMap;
 use crossterm::event::Event as CrosstermEvent;
-use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification};
+use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification, ConfigChanged};
 
 use actions::EditorAction;
 use ui::CoreEvent;
@@ -153,6 +153,7 @@ impl Editor {
                 XiNotification::DefStyle(style) => self.def_style(style),
                 XiNotification::ScrollTo(scroll_to) => self.scroll_to(scroll_to),
                 XiNotification::ThemeChanged(theme) => self.theme = Some(theme),
+                XiNotification::ConfigChanged(config) => self.config_changed(config),
                 _ => info!("ignoring Xi core notification: {:?}", notification),
             },
             CoreEvent::MeasureWidth((_request, _result_tx)) => unimplemented!(),
@@ -166,6 +167,12 @@ impl Editor {
             None => self
                 .delayed_events
                 .push(CoreEvent::Notify(XiNotification::Update(update))),
+        }
+    }
+
+    fn config_changed(&mut self, changes: ConfigChanged) {
+        if let Some(view) = self.views.get_mut(&changes.view_id) {
+            view.config_changed(changes.changes);
         }
     }
 
