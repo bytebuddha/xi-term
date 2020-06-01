@@ -4,7 +4,7 @@ use futures::{Async, Future, Poll, Stream};
 
 use indexmap::IndexMap;
 use crossterm::event::Event as CrosstermEvent;
-use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
+use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
 use ui::CoreEvent;
 use widgets::EditorWidget;
@@ -42,6 +42,7 @@ pub struct Editor {
 
     pub size: (u16, u16),
     pub styles: HashMap<u64, Style>,
+    pub theme: Option<ThemeChanged>
 }
 
 /// Methods for general use.
@@ -60,6 +61,7 @@ impl Editor {
             client,
             size: (0, 0),
             styles,
+            theme: None
         }
     }
 }
@@ -136,6 +138,7 @@ impl Editor {
                 XiNotification::Update(update) => self.update(update),
                 XiNotification::DefStyle(style) => self.def_style(style),
                 XiNotification::ScrollTo(scroll_to) => self.scroll_to(scroll_to),
+                XiNotification::ThemeChanged(theme) => self.theme = Some(theme),
                 _ => info!("ignoring Xi core notification: {:?}", notification),
             },
             CoreEvent::MeasureWidth((_request, _result_tx)) => unimplemented!(),

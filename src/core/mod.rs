@@ -1,6 +1,9 @@
 mod logs;
 pub use self::logs::configure_logs;
 
+mod style;
+pub use self::style::u32_to_color;
+
 use xdg::BaseDirectories;
 
 pub fn init_panic_handler() {

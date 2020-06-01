@@ -1,10 +1,10 @@
 use tui::layout::Rect;
 use tui::buffer::Buffer;
 use tui::widgets::Widget;
-use tui::style::Color;
 use xrl::Line;
 
 use super::Chunk;
+use core::u32_to_color;
 use components::View;
 use components::Editor;
 
@@ -26,13 +26,6 @@ impl <'a, 'b, 'c>LineWidget<'a, 'b, 'c> {
     }
 }
 
-fn get_color(argb_color: u32) -> Color {
-    let r = ((argb_color & 0x00ff_0000) >> 16) as u8;
-    let g = ((argb_color & 0x0000_ff00) >> 8) as u8;
-    let b = (argb_color & 0x0000_00ff) as u8;
-    Color::Rgb(r, g, b)
-}
-
 impl <'a, 'b, 'c>Widget for LineWidget<'a, 'b, 'c> {
 
     fn render(self, area: Rect, buf: &mut Buffer) {
@@ -49,8 +42,9 @@ impl <'a, 'b, 'c>Widget for LineWidget<'a, 'b, 'c> {
                     };
 
                     Chunk::new(&line.text[start - area.x as usize..])
-                            .background(style.bg_color.map(|item|get_color(item)))
-                            .foreground(style.fg_color.map(|item|get_color(item)))
+                            .background(style.bg_color.map(|item|u32_to_color(item)))
+                            .foreground(style.fg_color.map(|item|u32_to_color(item)))
+                            .theme(self.editor.theme.as_ref())
                             .italic(style.italic)
                             .underlined(style.underline)
                             .render(chunk_rect, buf);
