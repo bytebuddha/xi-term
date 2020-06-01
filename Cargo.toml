@@ -14,4 +14,4 @@ tokio = "0.1.21"
 xdg = "2.2.0"
 indexmap = "1.0.2"
 xrl = "0.0.8"
-tui = { version = "0.9.5", features = ["crossterm"] }
+tui = { git = "https://github.com/fdehau/tui-rs", features = ["crossterm"] }

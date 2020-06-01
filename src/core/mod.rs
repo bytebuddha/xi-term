@@ -3,7 +3,7 @@ pub use self::logs::configure_logs;
 
 use xdg::BaseDirectories;
 
-pub fn add_panic_handler() {
+pub fn init_panic_handler() {
     use std::panic;
 
     panic::set_hook(Box::new(|err| {

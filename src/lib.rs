@@ -42,6 +42,7 @@ pub fn run() -> Result<(), Error> {
     if let Some(logfile) = matches.value_of("logfile") {
         core::configure_logs(logfile);
     }
+    core::init_panic_handler();
 
     tokio::run(future::lazy(move || {
         info!("starting xi-core");

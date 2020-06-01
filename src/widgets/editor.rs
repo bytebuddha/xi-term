@@ -16,7 +16,7 @@ impl <'a>EditorWidget<'a> {
     }
 
     pub fn calculate_view_rect(area: Rect) -> Rect {
-        area
+        Rect { x: area.x, y: area.y, width: area.width, height: area.height }
     }
 }
 
