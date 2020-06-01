@@ -43,8 +43,6 @@ impl <'a, 'b, 'c>Widget for LineWidget<'a, 'b, 'c> {
                         height: area.height
                     };
 
-                    error!("Chunk Rect: {:?}: {:?}", chunk_rect, style);
-
                     Chunk::new(&line.text[start..])
                             .background(style.bg_color.map(|item|get_color(item)))
                             .foreground(style.fg_color.map(|item|get_color(item)))

@@ -13,7 +13,7 @@ extern crate log4rs;
 
 extern crate futures;
 extern crate indexmap;
-extern crate termion;
+extern crate crossterm;
 extern crate tokio;
 extern crate xdg;
 extern crate xrl;

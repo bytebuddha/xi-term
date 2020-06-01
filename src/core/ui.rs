@@ -4,9 +4,9 @@ use futures::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::sync::oneshot::{self, Receiver, Sender};
 use futures::{Async, Future, Poll, Sink, Stream};
 
-use tui::backend::TermionBackend;
+use tui::backend::CrosstermBackend;
 use tui::terminal::Terminal as TuiTerminal;
-use termion::event::{Event, Key};
+use crossterm::event::{Event, KeyCode, KeyModifiers};
 use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
@@ -22,7 +22,7 @@ pub struct XiTerm {
     /// The terminal is used to draw on the screen a get inputs from
     /// the user.
     terminal: Terminal,
-    term: TuiTerminal<TermionBackend<Stdout>>,
+    term: TuiTerminal<CrosstermBackend<Stdout>>,
 
     /// Whether the editor is shutting down.
     exit: bool,
@@ -36,7 +36,7 @@ impl XiTerm {
     pub fn new(client: Client, events: UnboundedReceiver<CoreEvent>) -> Result<Self, Error> {
         Ok(XiTerm {
             terminal: Terminal::new()?,
-            term: TuiTerminal::new(TermionBackend::new(stdout()))?,
+            term: TuiTerminal::new(CrosstermBackend::new(stdout()))?,
             exit: false,
             editor: Editor::new(client),
             core_events: events,
@@ -51,7 +51,14 @@ impl XiTerm {
     fn handle_input(&mut self, event: Event) {
         debug!("handling input {:?}", event);
         match event {
-            Event::Key(Key::Ctrl('c')) => self.exit = true,
+            Event::Key(event) => {
+                if event.modifiers.contains(KeyModifiers::CONTROL) {
+                    if let KeyCode::Char('c') = event.code {
+                        self.exit = true
+                    }
+                }
+                self.editor.handle_input(Event::Key(event));
+            },
             event => {
                 self.editor.handle_input(event);
                 return;

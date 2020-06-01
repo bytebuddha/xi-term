@@ -3,7 +3,7 @@ use futures::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use futures::{Async, Future, Poll, Stream};
 
 use indexmap::IndexMap;
-use termion::event::Event as TermionEvent;
+use crossterm::event::Event as CrosstermEvent;
 use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
 use core::CoreEvent;
@@ -113,7 +113,7 @@ impl Future for Editor {
 
 impl Editor {
     /// Handle keyboard and mouse events
-    pub fn handle_input(&mut self, event: TermionEvent) {
+    pub fn handle_input(&mut self, event: CrosstermEvent) {
         if let Some(view) = self.views.get_mut(&self.current_view) {
             view.handle_input(event)
         }

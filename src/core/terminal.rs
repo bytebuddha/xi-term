@@ -1,41 +1,34 @@
-use std::io::{self, Stdout};
+use std::io::{Write, stdout};
 use std::thread::{sleep, spawn};
 use std::time::Duration;
 
 use futures::sync::mpsc::{unbounded, UnboundedReceiver, UnboundedSender};
 use futures::{Async, Poll, Sink, Stream};
 
-use failure::{Error, ResultExt};
+use failure::Error;
 
-use termion::event::Event;
-use termion::input::TermRead;
-use termion::raw::{IntoRawMode, RawTerminal};
-use termion::screen::AlternateScreen;
-use termion::terminal_size;
-
-/// Simple type alias for the Write implementer we render to.
-pub type RenderTarget = AlternateScreen<RawTerminal<Stdout>>;
+use crossterm::event::{ Event, EnableMouseCapture, DisableMouseCapture };
+use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::terminal::size;
 
 pub struct Terminal {
     size: UnboundedReceiver<(u16, u16)>,
-    stdin: UnboundedReceiver<Event>,
-    _stdout: RenderTarget,
+    stdin: UnboundedReceiver<Event>
 }
 
 impl Terminal {
     pub fn new() -> Result<Self, Error> {
         let (stdin_tx, stdin_rx) = unbounded();
         let (size_tx, size_rx) = unbounded();
-        let stdout = AlternateScreen::from(
-            io::stdout()
-                .into_raw_mode()
-                .context("Failed to put terminal into raw mode")?,
-        );
+
+        crossterm::execute!(stdout(), EnableMouseCapture, EnterAlternateScreen)?;
+
+        enable_raw_mode()?;
 
         let term = Terminal {
             stdin: stdin_rx,
-            size: size_rx,
-            _stdout: stdout,
+            size: size_rx
         };
 
         Terminal::start_stdin_listening(stdin_tx);
@@ -47,17 +40,12 @@ impl Terminal {
         let mut tx = tx;
         spawn(move || {
             info!("waiting for input events");
-            for event_res in io::stdin().events() {
-                match event_res {
-                    // TODO: at least log the errors
-                    Ok(event) => {
-                        let _ = tx.start_send(event).unwrap();
-                        let _ = tx.poll_complete().unwrap();
-                    }
-                    Err(e) => error!("{}", e),
+            loop {
+                if let Ok(event) = crossterm::event::read() {
+                    tx.start_send(event).unwrap();
+                    tx.poll_complete().unwrap();
                 }
             }
-            info!("stop waiting for input events");
         });
     }
 
@@ -67,7 +55,7 @@ impl Terminal {
             let mut current_size = (0, 0);
             info!("waiting for resize events");
             loop {
-                match terminal_size() {
+                match size() {
                     Ok(new_size) => {
                         if new_size != current_size {
                             info!(
@@ -134,5 +122,13 @@ impl Stream for Terminal {
         }
         debug!("done polling the terminal");
         Ok(Async::NotReady)
+    }
+}
+
+impl Drop for Terminal {
+    fn drop(&mut self) {
+        crossterm::execute!(stdout(), DisableMouseCapture, LeaveAlternateScreen).unwrap();
+
+        disable_raw_mode().unwrap();
     }
 }

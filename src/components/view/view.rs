@@ -1,4 +1,4 @@
-use termion::event::{Event, Key};
+use crossterm::event::{Event, KeyCode};
 use xrl::{LineCache, Update};
 
 use super::client::Client;
@@ -74,27 +74,25 @@ impl View {
 
     pub fn handle_input(&mut self, event: Event) {
         match event {
-            Event::Key(key) => match key {
-                Key::Char(c) => match c {
-                    '\n' => self.insert_newline(),
-                    '\t' => self.insert_tab(),
-                    _ => self.insert(c),
-                },
-                Key::Ctrl(c) => match c {
-                    'h' => self.client.backspace(),
-                    _ => error!("un-handled input ctrl+{}", c),
-                },
-                Key::Backspace => self.client.backspace(),
-                Key::Delete => self.client.delete(),
-                Key::Left => self.client.left(),
-                Key::Right => self.client.right(),
-                Key::Up => self.client.up(),
-                Key::Down => self.client.down(),
-                Key::Home => self.client.home(),
-                Key::End => self.client.end(),
-                Key::PageUp => self.client.page_up(),
-                Key::PageDown => self.client.page_down(),
-                k => error!("un-handled key {:?}", k),
+            Event::Key(key) => {
+                match key.code {
+                    KeyCode::Char(c) => match c {
+                        '\n' => self.insert_newline(),
+                        '\t' => self.insert_tab(),
+                        _ => self.insert(c),
+                    },
+                    KeyCode::Backspace => self.client.backspace(),
+                    KeyCode::Delete => self.client.delete(),
+                    KeyCode::Left => self.client.left(),
+                    KeyCode::Right => self.client.right(),
+                    KeyCode::Up => self.client.up(),
+                    KeyCode::Down => self.client.down(),
+                    KeyCode::Home => self.client.home(),
+                    KeyCode::End => self.client.end(),
+                    KeyCode::PageUp => self.client.page_up(),
+                    KeyCode::PageDown => self.client.page_down(),
+                    k => error!("un-handled key {:?}", k),
+                }
             },
             ev => error!("un-handled event {:?}", ev),
         }
