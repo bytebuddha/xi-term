@@ -14,12 +14,17 @@ impl <'a>EditorWidget<'a> {
     pub fn new(editor: &'a Editor) -> EditorWidget<'a> {
         EditorWidget { editor }
     }
+
+    pub fn calculate_view_rect(area: Rect) -> Rect {
+        area
+    }
 }
 
 impl <'a>Widget for EditorWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if let Some(view) = self.editor.views.get(&self.editor.current_view) {
-            ViewWidget::new(&self.editor, &view).render(area, buf)
+            let view_rect = EditorWidget::calculate_view_rect(area);
+            ViewWidget::new(&self.editor, &view).render(view_rect, buf)
         }
     }
 }

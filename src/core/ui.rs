@@ -13,6 +13,7 @@ use failure::Error;
 
 use core::{Terminal, TerminalEvent};
 use components::Editor;
+use widgets::EditorWidget;
 
 pub struct XiTerm {
     /// The editor holds the text buffers (named "views" in xi
@@ -72,9 +73,9 @@ impl XiTerm {
         let mut rect = None;
         term.draw(|mut f| {
             let editor_rect = f.size();
-            let editor = crate::widgets::EditorWidget::new(&editor);
+            let editor = EditorWidget::new(&editor);
             f.render_widget(editor, editor_rect);
-            rect = Some(editor_rect);
+            rect = Some(EditorWidget::calculate_view_rect(editor_rect));
         })?;
         if let Some(size) = rect {
             if let Some(view) = editor.views.get(&editor.current_view) {
