@@ -6,6 +6,7 @@ use indexmap::IndexMap;
 use crossterm::event::Event as CrosstermEvent;
 use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
+use actions::EditorAction;
 use ui::CoreEvent;
 use widgets::EditorWidget;
 use components::{View, ViewClient};
@@ -128,6 +129,16 @@ impl Editor {
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
             view.resize(EditorWidget::calculate_height_offset(size.1));
+        }
+    }
+
+    pub fn handle_action(&mut self, action: EditorAction) {
+        match action {
+            EditorAction::View(action) => {
+                if let Some(view) = self.views.get_mut(&self.current_view) {
+                    view.handle_action(action);
+                }
+            }
         }
     }
 

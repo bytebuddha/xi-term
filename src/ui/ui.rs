@@ -11,6 +11,7 @@ use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
 
+use actions::{ Action, SystemAction, ActionReactor };
 use ui::{Terminal, TerminalEvent};
 use components::Editor;
 use widgets::EditorWidget;
@@ -24,6 +25,8 @@ pub struct XiTerm {
     /// the user.
     terminal: Terminal,
     term: TuiTerminal<CrosstermBackend<Stdout>>,
+
+    actions: ActionReactor,
 
     /// Whether the editor is shutting down.
     exit: bool,
@@ -41,6 +44,7 @@ impl XiTerm {
             exit: false,
             editor: Editor::new(client),
             core_events: events,
+            actions: ActionReactor::default()
         })
     }
 
@@ -51,19 +55,32 @@ impl XiTerm {
     /// Global keybindings can be parsed here
     fn handle_input(&mut self, event: Event) {
         debug!("handling input {:?}", event);
-        match event {
-            Event::Key(event) => {
-                if event.modifiers.contains(KeyModifiers::CONTROL) {
-                    if let KeyCode::Char('c') = event.code {
-                        self.exit = true
-                    }
-                }
-                self.editor.handle_input(Event::Key(event));
-            },
-            event => {
-                self.editor.handle_input(event);
-                return;
+        if let Some(actions) = self.actions.event_to_action(&event) {
+            for action in actions {
+                self.perform_action(action.clone());
             }
+        } else {
+            match event {
+                Event::Key(event) => {
+                    if event.modifiers.contains(KeyModifiers::CONTROL) {
+                        if let KeyCode::Char('c') = event.code {
+                            self.exit = true
+                        }
+                    }
+                    self.editor.handle_input(Event::Key(event));
+                },
+                event => {
+                    self.editor.handle_input(event);
+                    return;
+                }
+            }
+        }
+    }
+
+    fn perform_action(&mut self, action: Action) {
+        match action {
+            Action::System(SystemAction::Quit) => self.exit = true,
+            Action::Editor(action) => self.editor.handle_action(action)
         }
     }
 

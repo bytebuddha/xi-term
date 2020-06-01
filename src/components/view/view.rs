@@ -2,6 +2,7 @@ use tui::layout::Rect;
 use crossterm::event::{Event, KeyCode};
 use xrl::{LineCache, Update};
 
+use actions::{ ViewAction, CursorAction };
 use super::client::Client;
 use super::window::Window;
 
@@ -73,6 +74,21 @@ impl View {
         self.window.update(cursor_line, nb_lines);
     }
 
+    pub fn handle_action(&mut self, action: ViewAction) {
+        match action {
+            ViewAction::Cursor(CursorAction::Up) => self.client.up(),
+            ViewAction::Cursor(CursorAction::Down) => self.client.down(),
+            ViewAction::Cursor(CursorAction::Left) => self.client.left(),
+            ViewAction::Cursor(CursorAction::Right) => self.client.right(),
+            ViewAction::Cursor(CursorAction::PageUp) => self.client.page_up(),
+            ViewAction::Cursor(CursorAction::PageDown) => self.client.page_down(),
+            ViewAction::Cursor(CursorAction::Backspace) => self.client.backspace(),
+            ViewAction::Cursor(CursorAction::Delete) => self.client.delete(),
+            ViewAction::Cursor(CursorAction::Home) => self.client.home(),
+            ViewAction::Cursor(CursorAction::End) => self.client.end(),
+        }
+    }
+
     pub fn handle_input(&mut self, event: Event) {
         match event {
             Event::Key(key) => {
@@ -83,16 +99,16 @@ impl View {
                         _ => self.insert(c),
                     },
                     KeyCode::Enter => self.client.insert_newline(),
-                    KeyCode::Backspace => self.client.backspace(),
-                    KeyCode::Delete => self.client.delete(),
-                    KeyCode::Left => self.client.left(),
-                    KeyCode::Right => self.client.right(),
-                    KeyCode::Up => self.client.up(),
-                    KeyCode::Down => self.client.down(),
-                    KeyCode::Home => self.client.home(),
-                    KeyCode::End => self.client.end(),
-                    KeyCode::PageUp => self.client.page_up(),
-                    KeyCode::PageDown => self.client.page_down(),
+                    KeyCode::Backspace => self.handle_action(ViewAction::Cursor(CursorAction::Backspace)),
+                    KeyCode::Delete => self.handle_action(ViewAction::Cursor(CursorAction::Delete)),
+                    KeyCode::Left => self.handle_action(ViewAction::Cursor(CursorAction::Left)),
+                    KeyCode::Right => self.handle_action(ViewAction::Cursor(CursorAction::Right)),
+                    KeyCode::Up => self.handle_action(ViewAction::Cursor(CursorAction::Up)),
+                    KeyCode::Down => self.handle_action(ViewAction::Cursor(CursorAction::Down)),
+                    KeyCode::Home => self.handle_action(ViewAction::Cursor(CursorAction::Home)),
+                    KeyCode::End => self.handle_action(ViewAction::Cursor(CursorAction::End)),
+                    KeyCode::PageUp => self.handle_action(ViewAction::Cursor(CursorAction::PageUp)),
+                    KeyCode::PageDown => self.handle_action(ViewAction::Cursor(CursorAction::PageDown)),
                     k => error!("un-handled key {:?}", k),
                 }
             },
