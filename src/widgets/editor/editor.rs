@@ -2,7 +2,7 @@ use tui::layout::Rect;
 use tui::buffer::Buffer;
 use tui::widgets::Widget;
 
-use super::{ ViewWidget };
+use widgets::{ ViewWidget };
 use crate::components::Editor;
 
 pub struct EditorWidget<'a> {
