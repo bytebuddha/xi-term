@@ -138,6 +138,9 @@ impl Editor {
                 if let Some(view) = self.views.get_mut(&self.current_view) {
                     view.handle_action(action);
                 }
+            },
+            EditorAction::SetTheme(theme) => {
+                 tokio::spawn(self.client.set_theme(&theme).map_err(|_| ()));
             }
         }
     }

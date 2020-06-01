@@ -1,5 +1,6 @@
 use tui::layout::Rect;
 use tui::buffer::Buffer;
+use tui::style::Color;
 use tui::widgets::Widget;
 
 use super::LineWidget;
@@ -21,6 +22,11 @@ impl <'a, 'b>ViewWidget<'a, 'b> {
 impl <'a, 'b>Widget for ViewWidget<'a, 'b> {
 
     fn render(self, area: Rect, buf: &mut Buffer) {
+        if let Some(theme) = &self.editor.theme {
+            if let Some(color) = theme.theme.background {
+                buf.set_background(area, Color::Rgb(color.r, color.g, color.b));
+            }
+        }
         let lines = self.view.cache.lines().iter()
             .skip(self.view.window.start() as usize)
             .take(self.view.window.size() as usize);

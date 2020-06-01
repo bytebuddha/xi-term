@@ -52,8 +52,6 @@ impl <'a, 'b, 'c>Widget for LineWidget<'a, 'b, 'c> {
                     current_step = start + style_def.length as usize;
                 }
             }
-        } else {
-            buf.set_background(area, tui::style::Style::default().bg);
         }
     }
 }
