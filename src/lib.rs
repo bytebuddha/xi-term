@@ -29,6 +29,7 @@ pub use failure::Error;
 use futures::{future, Future, Stream};
 use xrl::spawn;
 
+use core::ActionHandler;
 use actions::EditorAction;
 use ui::{XiTerm, XiTermServiceBuilder};
 
@@ -75,7 +76,7 @@ pub fn run() -> Result<(), Error> {
                     info!("initializing the TUI");
                     let mut tui = XiTerm::new(client_clone, core_events_rx)
                         .expect("failed to initialize the TUI");
-                    tui.editor.handle_action(EditorAction::SetTheme("base16-eighties.dark".into()));
+                    tui.editor.perform_action(EditorAction::SetTheme("base16-eighties.dark".into()));
                     tui.editor.new_view(
                         matches.value_of("file").map(ToString::to_string),
                     );

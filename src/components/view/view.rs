@@ -1,8 +1,6 @@
 use tui::layout::Rect;
-use crossterm::event::{Event, KeyCode};
 use xrl::{LineCache, Update, ConfigChanges};
 
-use actions::{ ViewAction, CursorAction };
 use super::{ client::Client, window::Window };
 
 #[derive(Debug, Default)]
@@ -15,7 +13,7 @@ pub struct View {
     pub cache: LineCache,
     cursor: Cursor,
     pub window: Window,
-    client: Client,
+    pub client: Client,
     cfg: Option<ConfigChanges>
 }
 
@@ -77,48 +75,6 @@ impl View {
 
     pub fn config_changed(&mut self, changes: ConfigChanges) {
         self.cfg = Some(changes);
-    }
-
-    pub fn handle_action(&mut self, action: ViewAction) {
-        match action {
-            ViewAction::Cursor(CursorAction::Up) => self.client.up(),
-            ViewAction::Cursor(CursorAction::Down) => self.client.down(),
-            ViewAction::Cursor(CursorAction::Left) => self.client.left(),
-            ViewAction::Cursor(CursorAction::Right) => self.client.right(),
-            ViewAction::Cursor(CursorAction::PageUp) => self.client.page_up(),
-            ViewAction::Cursor(CursorAction::PageDown) => self.client.page_down(),
-            ViewAction::Cursor(CursorAction::Backspace) => self.client.backspace(),
-            ViewAction::Cursor(CursorAction::Delete) => self.client.delete(),
-            ViewAction::Cursor(CursorAction::Home) => self.client.home(),
-            ViewAction::Cursor(CursorAction::End) => self.client.end(),
-        }
-    }
-
-    pub fn handle_input(&mut self, event: Event) {
-        match event {
-            Event::Key(key) => {
-                match key.code {
-                    KeyCode::Char(c) => match c {
-                        '\n' => self.insert_newline(),
-                        '\t' => self.insert_tab(),
-                        _ => self.insert(c),
-                    },
-                    KeyCode::Enter => self.client.insert_newline(),
-                    KeyCode::Backspace => self.handle_action(ViewAction::Cursor(CursorAction::Backspace)),
-                    KeyCode::Delete => self.handle_action(ViewAction::Cursor(CursorAction::Delete)),
-                    KeyCode::Left => self.handle_action(ViewAction::Cursor(CursorAction::Left)),
-                    KeyCode::Right => self.handle_action(ViewAction::Cursor(CursorAction::Right)),
-                    KeyCode::Up => self.handle_action(ViewAction::Cursor(CursorAction::Up)),
-                    KeyCode::Down => self.handle_action(ViewAction::Cursor(CursorAction::Down)),
-                    KeyCode::Home => self.handle_action(ViewAction::Cursor(CursorAction::Home)),
-                    KeyCode::End => self.handle_action(ViewAction::Cursor(CursorAction::End)),
-                    KeyCode::PageUp => self.handle_action(ViewAction::Cursor(CursorAction::PageUp)),
-                    KeyCode::PageDown => self.handle_action(ViewAction::Cursor(CursorAction::PageDown)),
-                    k => error!("un-handled key {:?}", k),
-                }
-            },
-            ev => error!("un-handled event {:?}", ev),
-        }
     }
 
     pub fn render_cursor(&self, area: Rect) -> Option<(u16, u16)> {

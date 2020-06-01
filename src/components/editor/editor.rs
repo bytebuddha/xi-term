@@ -3,10 +3,8 @@ use futures::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use futures::{Async, Future, Poll, Stream};
 
 use indexmap::IndexMap;
-use crossterm::event::Event as CrosstermEvent;
 use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification, ConfigChanged};
 
-use actions::EditorAction;
 use ui::CoreEvent;
 use widgets::EditorWidget;
 use components::{View, ViewClient};
@@ -116,12 +114,6 @@ impl Future for Editor {
 }
 
 impl Editor {
-    /// Handle keyboard and mouse events
-    pub fn handle_input(&mut self, event: CrosstermEvent) {
-        if let Some(view) = self.views.get_mut(&self.current_view) {
-            view.handle_input(event)
-        }
-    }
 
     /// Handle terminal size changes
     pub fn handle_resize(&mut self, size: (u16, u16)) {
@@ -129,19 +121,6 @@ impl Editor {
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
             view.resize(EditorWidget::calculate_height_offset(size.1));
-        }
-    }
-
-    pub fn handle_action(&mut self, action: EditorAction) {
-        match action {
-            EditorAction::View(action) => {
-                if let Some(view) = self.views.get_mut(&self.current_view) {
-                    view.handle_action(action);
-                }
-            },
-            EditorAction::SetTheme(theme) => {
-                 tokio::spawn(self.client.set_theme(&theme).map_err(|_| ()));
-            }
         }
     }
 

@@ -6,12 +6,12 @@ use futures::{Async, Future, Poll, Sink, Stream};
 
 use tui::backend::CrosstermBackend;
 use tui::terminal::Terminal as TuiTerminal;
-use crossterm::event::{Event, KeyCode, KeyModifiers};
 use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
 
-use actions::{ Action, SystemAction, ActionReactor };
+use core::EventHandler;
+use actions::ActionReactor;
 use ui::{Terminal, TerminalEvent};
 use components::Editor;
 use widgets::EditorWidget;
@@ -23,16 +23,16 @@ pub struct XiTerm {
 
     /// The terminal is used to draw on the screen a get inputs from
     /// the user.
-    terminal: Terminal,
-    term: TuiTerminal<CrosstermBackend<Stdout>>,
+    pub terminal: Terminal,
+    pub term: TuiTerminal<CrosstermBackend<Stdout>>,
 
-    actions: ActionReactor,
+    pub actions: ActionReactor,
 
     /// Whether the editor is shutting down.
-    exit: bool,
+    pub exit: bool,
 
     /// Stream of messages from Xi core.
-    core_events: UnboundedReceiver<CoreEvent>,
+    pub core_events: UnboundedReceiver<CoreEvent>,
 }
 
 impl XiTerm {
@@ -53,36 +53,29 @@ impl XiTerm {
     }
 
     /// Global keybindings can be parsed here
-    fn handle_input(&mut self, event: Event) {
-        debug!("handling input {:?}", event);
-        if let Some(actions) = self.actions.event_to_action(&event) {
-            for action in actions {
-                self.perform_action(action.clone());
-            }
-        } else {
-            match event {
-                Event::Key(event) => {
-                    if event.modifiers.contains(KeyModifiers::CONTROL) {
-                        if let KeyCode::Char('c') = event.code {
-                            self.exit = true
-                        }
-                    }
-                    self.editor.handle_input(Event::Key(event));
-                },
-                event => {
-                    self.editor.handle_input(event);
-                    return;
-                }
-            }
-        }
-    }
-
-    fn perform_action(&mut self, action: Action) {
-        match action {
-            Action::System(SystemAction::Quit) => self.exit = true,
-            Action::Editor(action) => self.editor.handle_action(action)
-        }
-    }
+    //fn handle_input(&mut self, event: Event) {
+    //    debug!("handling input {:?}", event);
+    //    if let Some(actions) = self.actions.event_to_action(&event) {
+    //        for action in actions {
+    //            self.perform_action(action.clone());
+    //        }
+    //    } else {
+    //        match event {
+    //            Event::Key(event) => {
+    //                if event.modifiers.contains(KeyModifiers::CONTROL) {
+    //                    if let KeyCode::Char('c') = event.code {
+    //                        self.exit = true
+    //                    }
+    //                }
+    //                self.editor.handle_input(Event::Key(event));
+    //            },
+    //            event => {
+    //                self.editor.handle_input(event);
+    //                return;
+    //            }
+    //        }
+    //    }
+    //}
 
     fn render(&mut self) -> Result<(), Error> {
 
@@ -130,7 +123,7 @@ impl XiTerm {
         loop {
             match self.terminal.poll() {
                 Ok(Async::Ready(Some(event))) => match event {
-                    TerminalEvent::Input(event) => self.handle_input(event),
+                    TerminalEvent::Input(event) => self.handle_event(event),
                     TerminalEvent::Resize(event) => self.handle_resize(event),
                 },
                 Ok(Async::Ready(None)) => {
