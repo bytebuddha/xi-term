@@ -7,6 +7,7 @@ use crossterm::event::Event as CrosstermEvent;
 use xrl::{Client, ScrollTo, Style, Update, ViewId, XiNotification};
 
 use ui::CoreEvent;
+use widgets::EditorWidget;
 use components::{View, ViewClient};
 
 /// The main interface to xi-core
@@ -90,7 +91,7 @@ impl Future for Editor {
                     info!("creating new view {:?}", view_id);
                     let client = ViewClient::new(self.client.clone(), view_id);
                     let mut view = View::new(client);
-                    view.resize(self.size.1);
+                    view.resize(EditorWidget::calculate_height_offset(self.size.1));
                     self.views.insert(view_id, view);
                     info!("switching to view {:?}", view_id);
                     self.current_view = view_id;
@@ -124,7 +125,7 @@ impl Editor {
         info!("setting new terminal size");
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
-            view.resize(size.1);
+            view.resize(EditorWidget::calculate_height_offset(size.1));
         }
     }
 

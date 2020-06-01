@@ -109,12 +109,16 @@ impl View {
 
         if (self.cursor.line) < self.cache.before() {
             warn!(
-                "the cursor is on line {}render_cursor which is marked invalid in the cache",
+                "the cursor is on line {} render_cursor which is marked invalid in the cache",
                 self.cursor.line
             );
             return None;
         }
         // Get the line that has the cursor
+        //if self.cursor.line < area.y as u64 {
+        //    warn!("the cursor line {} is not within the visible rect {:?}", self.cursor.line, area);
+        //    return None;
+        //}
         let line_idx = (self.cursor.line) - self.cache.before();
         let line = match self.cache.lines().get(line_idx as usize) {
             Some(line) => line,
@@ -127,14 +131,14 @@ impl View {
         if line_idx < (self.window.start()) {
             warn!(
                 "the line that has the cursor (nb={}, cache_idx={}) not within the displayed window ({:?})",
-                self.cursor.line + area.x as u64,
+                self.cursor.line + area.y as u64,
                 line_idx,
                 self.window
             );
             return None;
         }
         // Get the line vertical offset so that we know where to draw it.
-        let line_pos = line_idx - self.window.start();
+        let line_pos = line_idx - self.window.start() + area.y as u64;
 
         // Calculate the cursor position on the linerender_cursor. The trick is that we know the position within
         // the string, but characters may have various lengths. For the moment, we only handle
@@ -147,12 +151,7 @@ impl View {
             .chars()
             .take(self.cursor.column as usize)
             .fold(0, |acc, c| acc + self.translate_char_width(acc, c));
-        if column >= area.x && column < area.x + area.width &&
-           line_pos >= area.y as u64 && (line_pos as u16) < area.y + area.height {
-               Some((column as u16, line_pos as u16))
-       } else {
-           None
-       }
+        Some((column as u16 + area.x, line_pos as u16))
     }
 
     fn translate_char_width(&self, position: u16, c: char) -> u16 {

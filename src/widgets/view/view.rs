@@ -26,16 +26,24 @@ impl <'a, 'b>Widget for ViewWidget<'a, 'b> {
             .take(self.view.window.size() as usize);
 
         for (line_index, line) in lines.enumerate() {
-            let line_rect = Rect { x: area.x, y: area.y + line_index as u16, width: area.width, height: 1};
-            LineWidget::new(&self.editor, &self.view, Some(line)).render(line_rect, buf);
+            let start_y = area.y + line_index as u16;
+            let start_x = area.x;
+            if start_y < area.height + area.y && start_x < area.width + area.x {
+                let line_rect = Rect { x: start_x, y: start_y, width: area.width, height: 1};
+                LineWidget::new(&self.editor, &self.view).line(line).render(line_rect, buf);
+            }
         }
 
         let line_count = self.view.cache.lines().len() as u16;
         let win_size = self.view.window.size();
         if win_size > line_count {
             for num in line_count..win_size {
-                let line_rect = Rect { x: area.x, y: area.y + num, width: area.width, height: 1};
-                LineWidget::new(&self.editor, &self.view, None).render(line_rect, buf);
+                let start_y = area.y + num as u16;
+                let start_x = area.x;
+                if start_y < area.height + area.y && start_x < area.width + area.x {
+                    let line_rect = Rect { x: start_x, y: start_y, width: area.width, height: 1};
+                    LineWidget::new(&self.editor, &self.view).render(line_rect, buf);
+                }
             }
         }
     }

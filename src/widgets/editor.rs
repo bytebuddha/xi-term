@@ -16,7 +16,27 @@ impl <'a>EditorWidget<'a> {
     }
 
     pub fn calculate_view_rect(area: Rect) -> Rect {
-        Rect { x: area.x, y: area.y, width: area.width, height: area.height }
+        let x = EditorWidget::calculate_x_offset(area.y);
+        let y = EditorWidget::calculate_y_offset(area.x);
+        let height = EditorWidget::calculate_height_offset(area.height);
+        let width = EditorWidget::calculate_width_offset(area.width);
+        Rect { x, y, width, height }
+    }
+
+    pub fn calculate_height_offset(height: u16) -> u16 {
+        height
+    }
+
+    pub fn calculate_y_offset(y: u16) -> u16 {
+        y
+    }
+
+    pub fn calculate_width_offset(width: u16) -> u16 {
+        width
+    }
+
+    pub fn calculate_x_offset(x: u16) -> u16 {
+        x
     }
 }
 

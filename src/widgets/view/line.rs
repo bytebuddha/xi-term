@@ -16,8 +16,13 @@ pub struct LineWidget<'a, 'b, 'c> {
 
 impl <'a, 'b, 'c>LineWidget<'a, 'b, 'c> {
 
-    pub fn new(editor: &'b Editor, _view: &'c View, line: Option<&'a Line>) -> LineWidget<'a, 'b, 'c> {
-        LineWidget { editor, _view, line }
+    pub fn new(editor: &'b Editor, _view: &'c View) -> LineWidget<'a, 'b, 'c> {
+        LineWidget { editor, _view, line: None }
+    }
+
+    pub fn line(mut self, line: &'a Line) -> LineWidget<'a, 'b, 'c> {
+        self.line = Some(line);
+        self
     }
 }
 
@@ -43,7 +48,7 @@ impl <'a, 'b, 'c>Widget for LineWidget<'a, 'b, 'c> {
                         height: area.height
                     };
 
-                    Chunk::new(&line.text[start..])
+                    Chunk::new(&line.text[start - area.x as usize..])
                             .background(style.bg_color.map(|item|get_color(item)))
                             .foreground(style.fg_color.map(|item|get_color(item)))
                             .italic(style.italic)
