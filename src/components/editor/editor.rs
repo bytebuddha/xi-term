@@ -43,7 +43,8 @@ pub struct Editor {
     pub styles: HashMap<u64, Style>,
     pub theme: Option<ThemeChanged>,
     pub languages: Vec<String>,
-    pub themes: Vec<String>
+    pub themes: Vec<String>,
+    pub display_title_bar: bool
 }
 
 /// Methods for general use.
@@ -64,7 +65,8 @@ impl Editor {
             styles,
             theme: None,
             themes: vec![],
-            languages: vec![]
+            languages: vec![],
+            display_title_bar: true
         }
     }
 }
@@ -96,7 +98,7 @@ impl Future for Editor {
                     info!("creating new view {:?}", view_id);
                     let client = ViewClient::new(self.client.clone(), view_id);
                     let mut view = View::new(client);
-                    view.resize(EditorWidget::calculate_height_offset(self.size.1));
+                    view.resize(EditorWidget::calculate_height_offset(self.display_title_bar, self.size.1));
                     self.views.insert(view_id, view);
                     info!("switching to view {:?}", view_id);
                     self.current_view = view_id;
@@ -124,7 +126,7 @@ impl Editor {
         info!("setting new terminal size");
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
-            view.resize(EditorWidget::calculate_height_offset(size.1));
+            view.resize(EditorWidget::calculate_height_offset(self.display_title_bar, size.1));
         }
     }
 

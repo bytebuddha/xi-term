@@ -12,7 +12,7 @@ log4rs = "0.8.3"
 crossterm = "0.17.5"
 tokio = "0.1.21"
 xdg = "2.2.0"
-indexmap = "1.0.2"
+indexmap = "1.4.0"
 xrl = "0.0.8"
 tui = { git = "https://github.com/fdehau/tui-rs", features = ["crossterm"] }
 textwrap = "*"

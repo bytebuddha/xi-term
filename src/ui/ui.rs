@@ -79,9 +79,9 @@ impl XiTerm {
             let mut rect = None;
             term.draw(|mut f| {
                 let editor_rect = f.size();
-                let editor = EditorWidget::new(&editor);
-                f.render_widget(editor, editor_rect);
-                rect = Some(EditorWidget::calculate_view_rect(editor_rect));
+                let editor_widget = EditorWidget::new(&editor);
+                f.render_widget(editor_widget, editor_rect);
+                rect = Some(EditorWidget::calculate_view_rect(editor.display_title_bar, editor_rect));
             })?;
             if let Some(size) = rect {
                 if let Some(view) = editor.views.get(&editor.current_view) {

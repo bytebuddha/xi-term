@@ -14,7 +14,8 @@ pub struct View {
     cursor: Cursor,
     pub window: Window,
     pub client: Client,
-    cfg: Option<ConfigChanges>
+    cfg: Option<ConfigChanges>,
+    pub pristine: bool
 }
 
 impl View {
@@ -24,13 +25,15 @@ impl View {
             cursor: Default::default(),
             window: Window::new(),
             cfg: None,
-            client
+            client,
+            pristine: false
         }
     }
 
     pub fn update_cache(&mut self, update: Update) {
         info!("updating cache");
-        self.cache.update(update)
+        self.pristine = update.pristine;
+        self.cache.update(update);
     }
 
     pub fn set_cursor(&mut self, line: u64, column: u64) {
