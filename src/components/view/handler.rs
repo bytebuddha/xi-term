@@ -1,4 +1,4 @@
-use crossterm::event::{ Event, KeyCode };
+use crossterm::event::{ Event, KeyCode, MouseEvent, MouseButton };
 
 use super::View;
 use core::{ EventHandler, ActionHandler };
@@ -27,6 +27,24 @@ impl EventHandler for View {
                     KeyCode::PageUp => self.perform_action(ViewAction::Cursor(CursorAction::PageUp)),
                     KeyCode::PageDown => self.perform_action(ViewAction::Cursor(CursorAction::PageDown)),
                     k => error!("un-handled key {:?}", k),
+                }
+            },
+            Event::Mouse(mouse) => {
+                match mouse {
+                    MouseEvent::ScrollUp(_, _, _) => self.client.up(),
+                    MouseEvent::ScrollDown(_, _, _) => self.client.down(),
+                    MouseEvent::Down(btn, x, y, _) => {
+                        match btn {
+                            MouseButton::Left => {
+                                if let Some(rect) = self.rect {
+                                    error!("Click Rect: {:?}", rect);
+                                    self.click(rect, u64::from(y), u64::from(x));
+                                }
+                            },
+                            _ => {}
+                        }
+                    },
+                    _ => {}
                 }
             },
             ev => error!("un-handled event {:?}", ev),

@@ -61,6 +61,15 @@ impl ActionHandler<Action> for XiTerm {
                         self.prompt = None;
                     },
                     UiAction::ToggleLineNumbers => {
+                        if self.editor.display_gutter {
+                            if let Some((width, height)) = self.current_size {
+                                self.handle_resize((width, height + 4));
+                            }
+                        } else {
+                            if let Some((width, height)) = self.current_size {
+                                self.handle_resize((width, height - 1));
+                            }
+                        }
                         self.editor.display_gutter = !self.editor.display_gutter;
                         self.prompt = None
                     }

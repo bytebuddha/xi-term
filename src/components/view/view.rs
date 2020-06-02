@@ -15,7 +15,8 @@ pub struct View {
     pub window: Window,
     pub client: Client,
     cfg: Option<ConfigChanges>,
-    pub pristine: bool
+    pub pristine: bool,
+    pub rect: Option<Rect>
 }
 
 impl View {
@@ -26,7 +27,8 @@ impl View {
             window: Window::new(),
             cfg: None,
             client,
-            pristine: false
+            pristine: false,
+            rect: None
         }
     }
 
@@ -155,5 +157,47 @@ impl View {
 
     pub fn save(&mut self, file: &str) {
         self.client.save(file);
+    }
+
+    pub fn click(&mut self, rect: Rect, x: u64, y: u64) {
+        let (line, column) = self.get_click_location(rect, x, y);
+        error!("CLick Location: {}, {}", line, column);
+        self.client.click(line, column);
+    }
+
+    /// TODO: Fix this it is very buggy
+    fn get_click_location(&self, rect: Rect, x: u64, y: u64) -> (u64, u64) {
+        let lineno = if x + self.cache.before() + self.window.start() < rect.y as u64 {
+            x + self.cache.before() + self.window.start()
+        } else {
+            x + self.cache.before() + self.window.start() - rect.y as u64
+        };
+        if let Some(line) = self.cache.lines().get(x as usize) {
+            if y < 5 {
+                return (lineno, rect.y as u64);
+            }
+            let mut text_len: u16 = 0;
+            for (idx, c) in line.text.chars().enumerate() {
+                let char_width = self.translate_char_width(text_len, c);
+                text_len += char_width;
+                if u64::from(text_len) >= y {
+                    // If the character at idx is wider than one column,
+                    // the click occurred within the character. Otherwise,
+                    // the click occurred on the character at idx + 1
+                    if char_width > 1 {
+                        return (lineno, (idx - rect.x as usize) as u64 - rect.y as u64);
+                    } else {
+                        return (
+                            lineno as u64,
+                            (idx - rect.x as usize) as u64,
+                        );
+                    }
+                }
+            }
+            return (lineno - rect.x as u64, line.text.len() as u64 + 1);
+        } else {
+            warn!("no line at index {} found in cache", x);
+            return (x + rect.x as u64, y);
+        }
     }
 }

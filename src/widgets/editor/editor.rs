@@ -1,19 +1,17 @@
 use tui::layout::Rect;
 use tui::buffer::Buffer;
-use tui::widgets::Widget;
+use tui::widgets::{ Widget, StatefulWidget };
 
 use super::{ TitleBar, Gutter };
 use widgets::{ ViewWidget };
 use crate::components::Editor;
 
-pub struct EditorWidget<'a> {
-    editor: &'a Editor
-}
+pub struct EditorWidget;
 
-impl <'a>EditorWidget<'a> {
+impl EditorWidget {
 
-    pub fn new(editor: &'a Editor) -> EditorWidget<'a> {
-        EditorWidget { editor }
+    pub fn new() -> EditorWidget {
+        EditorWidget
     }
 
     pub fn calculate_view_rect(display_title_bar: bool, display_gutter: bool, area: Rect) -> Rect {
@@ -69,18 +67,22 @@ impl <'a>EditorWidget<'a> {
     }
 }
 
-impl <'a>Widget for EditorWidget<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if let Some(view) = self.editor.views.get(&self.editor.current_view) {
-            let view_rect = EditorWidget::calculate_view_rect(self.editor.display_title_bar, self.editor.display_gutter, area);
-            ViewWidget::new(&self.editor, &view).render(view_rect, buf);
-            if self.editor.display_title_bar {
-                let title_bar_rect = EditorWidget::calculate_title_bar_rect(area);
-                TitleBar::new(&self.editor).render(title_bar_rect, buf);
-            }
+impl StatefulWidget for EditorWidget {
 
-            if self.editor.display_gutter {
-                let gutter_rect = self.calculate_gutter_rect(self.editor.display_title_bar, area);
+    type State = Editor;
+
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        if state.display_title_bar {
+            let title_bar_rect = EditorWidget::calculate_title_bar_rect(area);
+            TitleBar::new(&state).render(title_bar_rect, buf);
+        }
+        if let Some(view) = state.views.get_mut(&state.current_view) {
+            let view_rect = EditorWidget::calculate_view_rect(state.display_title_bar, state.display_gutter, area);
+            ViewWidget::new(&state.styles).theme(state.theme.as_ref()).render(view_rect, buf, view);
+            view.rect = Some(view_rect);
+
+            if state.display_gutter {
+                let gutter_rect = self.calculate_gutter_rect(state.display_title_bar, area);
                 Gutter::new(&view).start(view.cache.before()).render(gutter_rect, buf);
             }
         }

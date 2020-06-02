@@ -94,4 +94,13 @@ impl Client {
     pub fn save(&mut self, file: &str) {
         spawn(self.inner.save(self.view_id, file).map_err(|_| ()));
     }
+
+    pub fn click(&mut self, line: u64, column: u64) {
+        error!("Received click: {}, {}", line, column);
+        let f = self
+            .inner
+            .click_point_select(self.view_id, line, column)
+            .map_err(|_| ());
+        spawn(f);
+    }
 }

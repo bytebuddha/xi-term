@@ -59,14 +59,14 @@ impl XiTerm {
 
     fn render(&mut self) -> Result<(), Error> {
 
-        let XiTerm { term, editor, .. } = self;
+        let XiTerm { term, editor, prompt, .. } = self;
 
-        if let Some(prompt) = &self.prompt {
+        if let Some(prompt) = &prompt {
             let mut rect = None;
             term.draw(|mut f| {
                 let prompt_rect = f.size();
-                let editor = EditorWidget::new(&editor);
-                f.render_widget(editor, prompt_rect);
+                let editor_widget = EditorWidget::new();
+                f.render_stateful_widget(editor_widget, prompt_rect, editor);
                 let prompt = PromptWidget::new(&prompt);
                 f.render_widget(prompt, prompt_rect);
                 rect = Some(prompt_rect);
@@ -82,8 +82,8 @@ impl XiTerm {
             let mut rect = None;
             term.draw(|mut f| {
                 let editor_rect = f.size();
-                let editor_widget = EditorWidget::new(&editor);
-                f.render_widget(editor_widget, editor_rect);
+                let editor_widget = EditorWidget::new();
+                f.render_stateful_widget(editor_widget, editor_rect, editor);
                 rect = Some(EditorWidget::calculate_view_rect(editor.display_title_bar, editor.display_gutter, editor_rect));
             })?;
             if let Some(size) = rect {
