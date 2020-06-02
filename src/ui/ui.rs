@@ -10,7 +10,7 @@ use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
 
-use core::EventHandler;
+use core::{ EventHandler, RenderCursor };
 use actions::ActionReactor;
 use ui::{Terminal, TerminalEvent};
 use components::{ Editor, Prompt };

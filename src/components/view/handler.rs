@@ -3,6 +3,7 @@ use crossterm::event::{ Event, KeyCode, MouseEvent, MouseButton };
 use super::View;
 use core::{ EventHandler, ActionHandler };
 use actions::{ ViewAction, CursorAction };
+use components::PromptResponse;
 
 impl EventHandler for View {
 
@@ -11,11 +12,11 @@ impl EventHandler for View {
             Event::Key(key) => {
                 match key.code {
                     KeyCode::Char(c) => match c {
-                        '\n' => self.insert_newline(),
-                        '\t' => self.insert_tab(),
-                        _ => self.insert(c),
+                        '\n' => {self.insert_newline();PromptResponse::Cancel},
+                        '\t' => {self.insert_tab();PromptResponse::Cancel},
+                        _ => {self.insert(c);PromptResponse::Cancel},
                     },
-                    KeyCode::Enter => self.client.insert_newline(),
+                    KeyCode::Enter => {self.client.insert_newline();PromptResponse::Cancel},
                     KeyCode::Backspace => self.perform_action(ViewAction::Cursor(CursorAction::Backspace)),
                     KeyCode::Delete => self.perform_action(ViewAction::Cursor(CursorAction::Delete)),
                     KeyCode::Left => self.perform_action(ViewAction::Cursor(CursorAction::Left)),
@@ -26,8 +27,8 @@ impl EventHandler for View {
                     KeyCode::End => self.perform_action(ViewAction::Cursor(CursorAction::End)),
                     KeyCode::PageUp => self.perform_action(ViewAction::Cursor(CursorAction::PageUp)),
                     KeyCode::PageDown => self.perform_action(ViewAction::Cursor(CursorAction::PageDown)),
-                    k => error!("un-handled key {:?}", k),
-                }
+                    k => {error!("un-handled key {:?}", k);PromptResponse::Continue},
+                };
             },
             Event::Mouse(mouse) => {
                 match mouse {

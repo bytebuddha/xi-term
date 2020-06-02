@@ -4,7 +4,7 @@ pub use self::view::View;
 pub use self::view::ViewClient;
 
 mod editor;
-pub use self::editor::Editor;
+pub use self::editor::{ Editor, EditorResponse };
 
 mod prompt;
 pub use self::prompt::{ Prompt, PromptResponse, Message };

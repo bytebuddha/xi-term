@@ -54,6 +54,11 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
                          (@subcommand back =>)
                          (@subcommand delete =>)
                     )
+                    (@subcommand find =>
+                        (@arg query: +takes_value +required "The phrase to search for")
+                        (@arg next: -n --next "Find the next Occurance")
+                        (@arg prev: -p --prev "Find the previous Occurance")
+                    )
                 )
                 (@subcommand theme =>
                     (setting: AppSettings::SubcommandRequiredElseHelp)
@@ -123,6 +128,20 @@ fn parse_view_matches<'a>(matches: &ArgMatches<'a>) -> PromptResponse {
         ("save", Some(matches)) => PromptResponse::Action(Action::Editor(EditorAction::View(ViewAction::Save(matches.value_of("file").unwrap().to_string())))),
         ("next", _) => PromptResponse::Action(Action::Editor(EditorAction::NextView)),
         ("prev", _) => PromptResponse::Action(Action::Editor(EditorAction::PrevView)),
+        ("find", Some(matches)) => {
+            let find = if matches.is_present("next") {
+                FindAction::Next(matches.is_present("wrap"), matches.is_present("same"))
+            } else if matches.is_present("prev") {
+                FindAction::Previous(matches.is_present("wrap"), matches.is_present("same"))
+            } else {
+                FindAction::Query(
+                    matches.value_of("query").unwrap().to_string(),
+                    matches.is_present("regex"), matches.is_present("case"),
+                    matches.is_present("words")
+                )
+            };
+            PromptResponse::Action(Action::Editor(EditorAction::View(ViewAction::Find(find))))
+        },
         (cmd, _) => PromptResponse::Message(Message::error(format!("Unknown View Command: '{}'", cmd)))
     }
 }

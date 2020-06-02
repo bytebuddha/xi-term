@@ -7,7 +7,7 @@ use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification,
 
 use ui::CoreEvent;
 use widgets::EditorWidget;
-use components::{View, ViewClient, PromptResponse};
+use components::{View, ViewClient, EditorResponse};
 
 /// The main interface to xi-core
 pub struct Editor {
@@ -202,7 +202,7 @@ impl Editor {
         tokio::spawn(future);
     }
 
-    pub fn next_buffer(&mut self) -> PromptResponse {
+    pub fn next_buffer(&mut self) -> EditorResponse {
         if let Some((dex, _, _)) = self.views.get_full(&self.current_view) {
             if dex + 1 == self.views.len() {
                 if let Some((view, _)) = self.views.get_index(0) {
@@ -212,10 +212,10 @@ impl Editor {
                 self.current_view = *view;
             }
         }
-        PromptResponse::Cancel
+        EditorResponse::Cancel
     }
 
-    pub fn prev_buffer(&mut self) -> PromptResponse {
+    pub fn prev_buffer(&mut self) -> EditorResponse {
         if let Some((dex, _, _)) = self.views.get_full(&self.current_view) {
             if dex == 0 {
                 if let Some((view, _)) = self.views.get_index(self.views.len() - 1) {
@@ -225,6 +225,6 @@ impl Editor {
                 self.current_view = *view;
             }
         }
-        PromptResponse::Cancel
+        EditorResponse::Cancel
     }
 }

@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use super::XiTerm;
-use components::{ Prompt, PromptResponse, Message };
+use components::{ Prompt, EditorResponse, Message };
 use core::ActionHandler;
 use actions::{ Action, SystemAction, UiAction };
 
@@ -12,16 +12,16 @@ impl ActionHandler<Action> for XiTerm {
             Action::System(SystemAction::Quit) => self.exit = true,
             Action::Editor(action) => {
                 match self.editor.perform_action(action) {
-                    PromptResponse::Message(msg) => {
+                    EditorResponse::Message(msg) => {
                         if let Some(prompt) = &mut self.prompt {
                             prompt.set_message(msg);
                         }
                     },
-                    PromptResponse::Cancel => {
+                    EditorResponse::Cancel => {
                         self.prompt = None;
                     },
-                    PromptResponse::Action(action) => self.perform_action(action),
-                    _ => {},
+                    EditorResponse::Action(action) => self.perform_action(action),
+                    EditorResponse::Continue => {},
                 }
             },
             Action::ShellCommand(cmds) => {

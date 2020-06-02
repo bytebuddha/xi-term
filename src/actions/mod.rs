@@ -1,5 +1,5 @@
 mod view;
-pub use self::view::{ ViewAction, CursorAction };
+pub use self::view::{ ViewAction, CursorAction, FindAction };
 
 mod editor;
 pub use self::editor::EditorAction;

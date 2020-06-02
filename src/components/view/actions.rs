@@ -1,10 +1,13 @@
 use super::View;
 use core::ActionHandler;
 use actions::{ ViewAction, CursorAction };
+use components::PromptResponse;
 
 impl ActionHandler<ViewAction> for View {
 
-    fn perform_action(&mut self, action: ViewAction) {
+    type Output = PromptResponse;
+
+    fn perform_action(&mut self, action: ViewAction) -> PromptResponse {
         match action {
             ViewAction::SetLanguage(language) => self.client.set_lang(language),
             ViewAction::Cursor(CursorAction::Up) => self.client.up(),
@@ -17,7 +20,9 @@ impl ActionHandler<ViewAction> for View {
             ViewAction::Cursor(CursorAction::Delete) => self.client.delete(),
             ViewAction::Cursor(CursorAction::Home) => self.client.home(),
             ViewAction::Cursor(CursorAction::End) => self.client.end(),
-            ViewAction::Save(file) => self.save(&file)
+            ViewAction::Save(file) => self.save(&file),
+            ViewAction::Find(action) => self.client.find(action),
         }
+        PromptResponse::Cancel
     }
 }

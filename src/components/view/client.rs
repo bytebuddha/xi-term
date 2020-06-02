@@ -2,6 +2,8 @@ use futures::Future;
 use tokio::spawn;
 use xrl;
 
+use crate::actions::FindAction;
+
 pub struct Client {
     inner: xrl::Client,
     view_id: xrl::ViewId,
@@ -102,5 +104,14 @@ impl Client {
             .click_point_select(self.view_id, line, column)
             .map_err(|_| ());
         spawn(f);
+    }
+
+    pub fn find(&mut self, action: FindAction) {
+        match action {
+            FindAction::Query(query, regex, case, words) => spawn(self.inner.find(self.view_id, &query, case, regex, words).map_err(|_|())),
+            FindAction::Next(wrap, same) => spawn(self.inner.find_next(self.view_id, wrap, same, xrl::ModifySelection::None).map_err(|_|())),
+            FindAction::Previous(wrap, same) => spawn(self.inner.find_prev(self.view_id, wrap, same, xrl::ModifySelection::None).map_err(|_|())),
+        };
+        spawn(self.inner.highlight_find(self.view_id, true).map_err(|_| ()));
     }
 }
