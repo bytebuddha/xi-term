@@ -46,7 +46,24 @@ impl ActionHandler<Action> for XiTerm {
             Action::Ui(action) => {
                 match action {
                     UiAction::ShowPrompt => self.prompt = Some(Prompt::new()),
-                    UiAction::HidePrompt => self.prompt = None
+                    UiAction::HidePrompt => self.prompt = None,
+                    UiAction::ToggleTitleBar => {
+                        if self.editor.display_title_bar {
+                            if let Some((width, height)) = self.current_size {
+                                self.handle_resize((width, height + 1));
+                            }
+                        } else {
+                            if let Some((width, height)) = self.current_size {
+                                self.handle_resize((width, height - 1));
+                            }
+                        }
+                        self.editor.display_title_bar = !self.editor.display_title_bar;
+                        self.prompt = None;
+                    },
+                    UiAction::ToggleLineNumbers => {
+                        self.editor.display_gutter = !self.editor.display_gutter;
+                        self.prompt = None
+                    }
                 }
             }
         }

@@ -131,7 +131,7 @@ impl View {
             .chars()
             .take(self.cursor.column as usize)
             .fold(0, |acc, c| acc + self.translate_char_width(acc, c));
-        Some((column as u16 + area.x, line_pos as u16))
+        Some((column as u16 + area.x + 1, line_pos as u16))
     }
 
     fn translate_char_width(&self, position: u16, c: char) -> u16 {

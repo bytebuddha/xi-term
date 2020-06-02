@@ -66,6 +66,12 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
                     (@arg file_name: -f --file +takes_value "The flie name to open")
                 )
             )
+            (@subcommand settings =>
+                (template: HELP_TEMPLATE)
+                (setting: AppSettings::SubcommandRequiredElseHelp)
+                (@subcommand title =>)
+                (@subcommand lines =>)
+            )
     ).get_matches_from_safe(input)
 }
 
@@ -87,7 +93,16 @@ fn parse_matches<'a>(matches: ArgMatches<'a>) -> PromptResponse {
     }
     match matches.subcommand() {
         ("editor", Some(matches)) => parse_editor_matches(matches),
+        ("settings", Some(matches)) => parse_settings_matches(matches),
         (cmd, _) => PromptResponse::Message(Message::error(format!("Unknown Editor Command: '{}'", cmd)))
+    }
+}
+
+fn parse_settings_matches<'a>(matches: &ArgMatches<'a>) -> PromptResponse {
+    match matches.subcommand() {
+        ("title", _) => PromptResponse::Action(Action::Ui(UiAction::ToggleTitleBar)),
+        ("lines", _) => PromptResponse::Action(Action::Ui(UiAction::ToggleLineNumbers)),
+        (cmd, _) => PromptResponse::Message(Message::error(format!("Unknown Settings Command: '{}'", cmd)))
     }
 }
 

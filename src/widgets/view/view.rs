@@ -33,7 +33,7 @@ impl <'a, 'b>Widget for ViewWidget<'a, 'b> {
 
         for (line_index, line) in lines.enumerate() {
             let start_y = area.y + line_index as u16;
-            let start_x = area.x;
+            let start_x = area.x + 1;
             if start_y < area.height + area.y && start_x < area.width + area.x {
                 let line_rect = Rect { x: start_x, y: start_y, width: area.width, height: 1};
                 LineWidget::new(&self.editor, &self.view).line(line).render(line_rect, buf);
@@ -45,7 +45,7 @@ impl <'a, 'b>Widget for ViewWidget<'a, 'b> {
         if win_size > line_count {
             for num in line_count..win_size {
                 let start_y = area.y + num as u16;
-                let start_x = area.x;
+                let start_x = area.x + 1;
                 if start_y < area.height + area.y && start_x < area.width + area.x {
                     let line_rect = Rect { x: start_x, y: start_y, width: area.width, height: 1};
                     LineWidget::new(&self.editor, &self.view).render(line_rect, buf);

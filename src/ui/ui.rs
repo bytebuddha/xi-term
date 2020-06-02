@@ -25,6 +25,7 @@ pub struct XiTerm {
     /// the user.
     pub terminal: Terminal,
     pub term: TuiTerminal<CrosstermBackend<Stdout>>,
+    pub current_size: Option<(u16, u16)>,
 
     pub actions: ActionReactor,
     pub prompt: Option<Prompt>,
@@ -46,11 +47,13 @@ impl XiTerm {
             editor: Editor::new(client),
             prompt: None,
             core_events: events,
-            actions: ActionReactor::default()
+            actions: ActionReactor::default(),
+            current_size: None
         })
     }
 
-    fn handle_resize(&mut self, size: (u16, u16)) {
+    pub fn handle_resize(&mut self, size: (u16, u16)) {
+        self.current_size = Some(size);
         self.editor.handle_resize(size);
     }
 
@@ -81,7 +84,7 @@ impl XiTerm {
                 let editor_rect = f.size();
                 let editor_widget = EditorWidget::new(&editor);
                 f.render_widget(editor_widget, editor_rect);
-                rect = Some(EditorWidget::calculate_view_rect(editor.display_title_bar, editor_rect));
+                rect = Some(EditorWidget::calculate_view_rect(editor.display_title_bar, editor.display_gutter, editor_rect));
             })?;
             if let Some(size) = rect {
                 if let Some(view) = editor.views.get(&editor.current_view) {

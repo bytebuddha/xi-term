@@ -26,5 +26,7 @@ pub enum SystemAction {
 #[derive(Debug, PartialEq, Clone)]
 pub enum UiAction {
     ShowPrompt,
-    HidePrompt
+    HidePrompt,
+    ToggleTitleBar,
+    ToggleLineNumbers
 }

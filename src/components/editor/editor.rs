@@ -44,7 +44,8 @@ pub struct Editor {
     pub theme: Option<ThemeChanged>,
     pub languages: Vec<String>,
     pub themes: Vec<String>,
-    pub display_title_bar: bool
+    pub display_title_bar: bool,
+    pub display_gutter: bool
 }
 
 /// Methods for general use.
@@ -66,7 +67,8 @@ impl Editor {
             theme: None,
             themes: vec![],
             languages: vec![],
-            display_title_bar: true
+            display_title_bar: true,
+            display_gutter: true
         }
     }
 }
