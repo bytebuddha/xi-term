@@ -6,6 +6,7 @@ impl ActionHandler<ViewAction> for View {
 
     fn perform_action(&mut self, action: ViewAction) {
         match action {
+            ViewAction::SetLanguage(language) => self.client.set_lang(language),
             ViewAction::Cursor(CursorAction::Up) => self.client.up(),
             ViewAction::Cursor(CursorAction::Down) => self.client.down(),
             ViewAction::Cursor(CursorAction::Left) => self.client.left(),
@@ -16,6 +17,7 @@ impl ActionHandler<ViewAction> for View {
             ViewAction::Cursor(CursorAction::Delete) => self.client.delete(),
             ViewAction::Cursor(CursorAction::Home) => self.client.home(),
             ViewAction::Cursor(CursorAction::End) => self.client.end(),
+            ViewAction::Save(file) => self.save(&file)
         }
     }
 }

@@ -1338,6 +1338,7 @@ dependencies = [
  "indexmap 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "log4rs 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "tui 0.9.5 (git+https://github.com/fdehau/tui-rs)",
  "xdg 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",

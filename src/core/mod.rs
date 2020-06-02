@@ -22,10 +22,14 @@ pub fn get_config_directory() -> Option<String> {
 
 pub trait EventHandler {
 
-    fn handle_event(&mut self, event: Event);
+    type Output = ();
+
+    fn handle_event(&mut self, event: Event) -> Self::Output;
 }
 
 pub trait ActionHandler<T> {
 
-    fn perform_action(&mut self, action: T);
+    type Output = ();
+
+    fn perform_action(&mut self, action: T) -> Self::Output;
 }

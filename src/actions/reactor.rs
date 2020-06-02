@@ -2,7 +2,7 @@ use crossterm::event::{ KeyCode, KeyEvent, Event, KeyModifiers };
 
 use std::collections::HashMap;
 
-use actions::{ Action, SystemAction };
+use actions::{ Action, SystemAction, UiAction };
 
 #[derive(Debug)]
 pub enum ReactorError {
@@ -43,6 +43,9 @@ impl Default for ActionReactor {
         let modifiers = KeyModifiers::CONTROL;
         let event = Event::Key(KeyEvent { code: KeyCode::Char('c'), modifiers });
         reactor.insert(event, vec![Action::System(SystemAction::Quit)]).unwrap();
+
+        let event = Event::Key(KeyEvent { code: KeyCode::Char('p'), modifiers });
+        reactor.insert(event, vec![Action::Ui(UiAction::ShowPrompt)]).unwrap();
         reactor
     }
 }

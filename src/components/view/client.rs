@@ -20,6 +20,11 @@ impl Client {
         spawn(f);
     }
 
+    pub fn set_lang(&mut self, lang: String) {
+        let f = self.inner.set_language(self.view_id, &lang).map_err(|_| ());
+        spawn(f);
+    }
+
     pub fn insert_newline(&mut self) {
         let f = self.inner.insert_newline(self.view_id).map_err(|_| ());
         spawn(f);
@@ -83,5 +88,10 @@ impl Client {
     pub fn backspace(&mut self) {
         let f = self.inner.backspace(self.view_id).map_err(|_| ());
         spawn(f);
+    }
+
+
+    pub fn save(&mut self, file: &str) {
+        spawn(self.inner.save(self.view_id, file).map_err(|_| ()));
     }
 }

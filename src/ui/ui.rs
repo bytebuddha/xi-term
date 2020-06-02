@@ -13,8 +13,8 @@ use failure::Error;
 use core::EventHandler;
 use actions::ActionReactor;
 use ui::{Terminal, TerminalEvent};
-use components::Editor;
-use widgets::EditorWidget;
+use components::{ Editor, Prompt };
+use widgets::{ PromptWidget, EditorWidget };
 
 pub struct XiTerm {
     /// The editor holds the text buffers (named "views" in xi
@@ -27,6 +27,7 @@ pub struct XiTerm {
     pub term: TuiTerminal<CrosstermBackend<Stdout>>,
 
     pub actions: ActionReactor,
+    pub prompt: Option<Prompt>,
 
     /// Whether the editor is shutting down.
     pub exit: bool,
@@ -43,6 +44,7 @@ impl XiTerm {
             term: TuiTerminal::new(CrosstermBackend::new(stdout()))?,
             exit: false,
             editor: Editor::new(client),
+            prompt: None,
             core_events: events,
             actions: ActionReactor::default()
         })
@@ -52,48 +54,44 @@ impl XiTerm {
         self.editor.handle_resize(size);
     }
 
-    /// Global keybindings can be parsed here
-    //fn handle_input(&mut self, event: Event) {
-    //    debug!("handling input {:?}", event);
-    //    if let Some(actions) = self.actions.event_to_action(&event) {
-    //        for action in actions {
-    //            self.perform_action(action.clone());
-    //        }
-    //    } else {
-    //        match event {
-    //            Event::Key(event) => {
-    //                if event.modifiers.contains(KeyModifiers::CONTROL) {
-    //                    if let KeyCode::Char('c') = event.code {
-    //                        self.exit = true
-    //                    }
-    //                }
-    //                self.editor.handle_input(Event::Key(event));
-    //            },
-    //            event => {
-    //                self.editor.handle_input(event);
-    //                return;
-    //            }
-    //        }
-    //    }
-    //}
-
     fn render(&mut self) -> Result<(), Error> {
 
         let XiTerm { term, editor, .. } = self;
-        let mut rect = None;
-        term.draw(|mut f| {
-            let editor_rect = f.size();
-            let editor = EditorWidget::new(&editor);
-            f.render_widget(editor, editor_rect);
-            rect = Some(EditorWidget::calculate_view_rect(editor_rect));
-        })?;
-        if let Some(size) = rect {
-            if let Some(view) = editor.views.get(&editor.current_view) {
-                if let Some(cursor) = view.render_cursor(size) {
-                    term.set_cursor(cursor.0, cursor.1)?;
+
+        if let Some(prompt) = &self.prompt {
+            let mut rect = None;
+            term.draw(|mut f| {
+                let prompt_rect = f.size();
+                let editor = EditorWidget::new(&editor);
+                f.render_widget(editor, prompt_rect);
+                let prompt = PromptWidget::new(&prompt);
+                f.render_widget(prompt, prompt_rect);
+                rect = Some(prompt_rect);
+            })?;
+            if let Some(size) = rect {
+                let column: u16 = prompt.chars
+                    .chars()
+                    .take(prompt.dex)
+                    .fold(0, |acc, c| acc + translate_char_width(acc, c));
+                term.set_cursor(column + 2, size.height)?;
+            }
+        } else {
+            let mut rect = None;
+            term.draw(|mut f| {
+                let editor_rect = f.size();
+                let editor = EditorWidget::new(&editor);
+                f.render_widget(editor, editor_rect);
+                rect = Some(EditorWidget::calculate_view_rect(editor_rect));
+            })?;
+            if let Some(size) = rect {
+                if let Some(view) = editor.views.get(&editor.current_view) {
+                    if let Some(cursor) = view.render_cursor(size) {
+                        term.set_cursor(cursor.0, cursor.1)?;
+                    }
                 }
             }
         }
+
         Ok(())
     }
 
@@ -240,5 +238,14 @@ impl<T> Future for NoErrorReceiver<T> {
     type Error = ();
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.0.poll().map_err(|_cancelled| ())
+    }
+}
+
+fn translate_char_width(position: u16, c: char) -> u16 {
+    match c {
+        // Caret notation means non-tab control characters are two columns wide
+        '\x00'..='\x08' | '\x0a'..='\x1f' | '\x7f' => 2,
+        '\t' => 4 - (position % 4),
+        _ => 1,
     }
 }

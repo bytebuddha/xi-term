@@ -1,5 +1,7 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum ViewAction {
+    Save(String),
+    SetLanguage(String),
     Cursor(CursorAction)
 }
 

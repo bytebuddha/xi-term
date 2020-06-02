@@ -7,7 +7,7 @@ use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification,
 
 use ui::CoreEvent;
 use widgets::EditorWidget;
-use components::{View, ViewClient};
+use components::{View, ViewClient, PromptResponse};
 
 /// The main interface to xi-core
 pub struct Editor {
@@ -41,7 +41,9 @@ pub struct Editor {
 
     pub size: (u16, u16),
     pub styles: HashMap<u64, Style>,
-    pub theme: Option<ThemeChanged>
+    pub theme: Option<ThemeChanged>,
+    pub languages: Vec<String>,
+    pub themes: Vec<String>
 }
 
 /// Methods for general use.
@@ -60,7 +62,9 @@ impl Editor {
             client,
             size: (0, 0),
             styles,
-            theme: None
+            theme: None,
+            themes: vec![],
+            languages: vec![]
         }
     }
 }
@@ -133,6 +137,8 @@ impl Editor {
                 XiNotification::ScrollTo(scroll_to) => self.scroll_to(scroll_to),
                 XiNotification::ThemeChanged(theme) => self.theme = Some(theme),
                 XiNotification::ConfigChanged(config) => self.config_changed(config),
+                XiNotification::AvailableThemes(themes) => self.themes = themes.themes,
+                XiNotification::AvailableLanguages(languages) => self.languages = languages.languages,
                 _ => info!("ignoring Xi core notification: {:?}", notification),
             },
             CoreEvent::MeasureWidth((_request, _result_tx)) => unimplemented!(),
@@ -190,5 +196,31 @@ impl Editor {
                 Ok(())
             });
         tokio::spawn(future);
+    }
+
+    pub fn next_buffer(&mut self) -> PromptResponse {
+        if let Some((dex, _, _)) = self.views.get_full(&self.current_view) {
+            if dex + 1 == self.views.len() {
+                if let Some((view, _)) = self.views.get_index(0) {
+                    self.current_view = *view;
+                }
+            } else if let Some((view, _)) = self.views.get_index(dex + 1) {
+                self.current_view = *view;
+            }
+        }
+        PromptResponse::Cancel
+    }
+
+    pub fn prev_buffer(&mut self) -> PromptResponse {
+        if let Some((dex, _, _)) = self.views.get_full(&self.current_view) {
+            if dex == 0 {
+                if let Some((view, _)) = self.views.get_index(self.views.len() - 1) {
+                    self.current_view = *view;
+                }
+            } else if let Some((view, _)) = self.views.get_index(dex - 1) {
+                self.current_view = *view;
+            }
+        }
+        PromptResponse::Cancel
     }
 }

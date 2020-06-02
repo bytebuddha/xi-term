@@ -149,4 +149,8 @@ impl View {
         }
         4 - (position % 4)
     }
+
+    pub fn save(&mut self, file: &str) {
+        self.client.save(file);
+    }
 }
