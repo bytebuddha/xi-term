@@ -30,10 +30,7 @@ impl ActionReactor {
     }
 
     pub fn event_to_action(&self, ev: &Event) -> Option<Vec<Action>> {
-        self.data.get(ev).map(|item| {
-            item.iter().map(|item| item.clone())
-                .collect()
-        })
+        self.data.get(ev).map(|item| item.to_vec())
     }
 }
 
@@ -48,7 +45,7 @@ impl Default for ActionReactor {
         reactor.insert(event, vec![Action::Ui(UiAction::ShowPrompt)]).unwrap();
 
         let event = Event::Key(KeyEvent { code: KeyCode::F(12), modifiers: KeyModifiers::empty() });
-        reactor.insert(event, vec![Action::Ui(UiAction::ShowDebugWidget)]).unwrap();
+        reactor.insert(event, vec![Action::Ui(UiAction::ToggleDebugWidget)]).unwrap();
         reactor
     }
 }

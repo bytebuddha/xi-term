@@ -38,26 +38,31 @@ impl ActionHandler<Action> for XiTerm {
                 if let Some(prompt) = &mut self.prompt {
                     prompt.set_message(Message::info(msg).title("Shell"));
                 } else {
-                    let mut prompt = Prompt::new();
+                    let mut prompt = Prompt::default();
                     prompt.set_message(Message::info(msg).title("Shell"));
                     self.prompt = Some(prompt);
                 }
             },
             Action::Ui(action) => {
                 match action {
-                    UiAction::ShowPrompt => self.prompt = Some(Prompt::new()),
-                    UiAction::ShowDebugWidget => {self.dev = Some(Dev::new());self.prompt = None},
+                    UiAction::ShowPrompt => self.prompt = Some(Prompt::default()),
+                    UiAction::ShowDebugWidget => {self.dev = Some(Dev::default());self.prompt = None},
                     UiAction::HideDebugWidget => self.dev = None,
+                    UiAction::ToggleDebugWidget => {
+                        if self.dev.is_none() {
+                            self.dev = Some(Dev::default());
+                        } else {
+                            self.dev = None;
+                        }
+                    },
                     UiAction::HidePrompt => self.prompt = None,
                     UiAction::ToggleTitleBar => {
                         if self.editor.display_title_bar {
                             if let Some((width, height)) = self.current_size {
                                 self.handle_resize((width, height + 1));
                             }
-                        } else {
-                            if let Some((width, height)) = self.current_size {
-                                self.handle_resize((width, height - 1));
-                            }
+                        } else if let Some((width, height)) = self.current_size {
+                            self.handle_resize((width, height - 1));
                         }
                         self.editor.display_title_bar = !self.editor.display_title_bar;
                         self.prompt = None;
@@ -67,10 +72,8 @@ impl ActionHandler<Action> for XiTerm {
                             if let Some((width, height)) = self.current_size {
                                 self.handle_resize((width, height + 4));
                             }
-                        } else {
-                            if let Some((width, height)) = self.current_size {
-                                self.handle_resize((width, height - 1));
-                            }
+                        } else if let Some((width, height)) = self.current_size {
+                            self.handle_resize((width, height - 1));
                         }
                         self.editor.display_gutter = !self.editor.display_gutter;
                         self.prompt = None

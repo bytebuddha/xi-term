@@ -71,7 +71,7 @@ pub fn run() -> Result<(), Error> {
 
             let client_clone = client.clone();
             client
-                .client_started(conf_dir.as_ref().map(|dir| &**dir), None)
+                .client_started(conf_dir.as_deref(), None)
                 .map_err(|e| error!("failed to send \"client_started\" {:?}", e))
                 .and_then(move |_| {
                     info!("initializing the TUI");

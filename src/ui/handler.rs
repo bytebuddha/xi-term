@@ -9,8 +9,7 @@ impl EventHandler for XiTerm {
         debug!("handling input {:?}", event);
         if let Some(actions) = self.actions.event_to_action(&event) {
             for action in actions {
-                self.perform_action(action.clone());
-                return;
+                self.perform_action(action);
             }
         } else {
             let mut close_dev = false;

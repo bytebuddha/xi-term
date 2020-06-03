@@ -25,7 +25,7 @@ impl View {
         View {
             cache: LineCache::default(),
             cursor: Default::default(),
-            window: Window::new(),
+            window: Window::default(),
             cfg: None,
             client,
             pristine: false,
@@ -140,10 +140,10 @@ impl View {
                     }
                 }
             }
-            return (lineno - rect.x as u64, line.text.len() as u64 + 1);
+            (lineno - rect.x as u64, line.text.len() as u64 + 1)
         } else {
             warn!("no line at index {} found in cache", x);
-            return (x + rect.x as u64, y);
+            (x + rect.x as u64, y)
         }
     }
 }

@@ -49,8 +49,8 @@ impl <'a, 'b, 'c, 'd>Widget for LineWidget<'a, 'b, 'c, 'd> {
                     };
 
                     Chunk::new(&line.text[(start - area.x as i64) as usize..])
-                        .background(style.bg_color.map(|item|u32_to_color(item)))
-                        .foreground(style.fg_color.map(|item|u32_to_color(item)))
+                        .background(style.bg_color.map(u32_to_color))
+                        .foreground(style.fg_color.map(u32_to_color))
                         .theme(self.theme)
                         .italic(style.italic)
                         .underlined(style.underline)

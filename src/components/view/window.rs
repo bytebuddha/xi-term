@@ -1,15 +1,12 @@
 use super::view::Cursor;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct Window {
     start: u64,
     size: u16,
 }
 
 impl Window {
-    pub fn new() -> Self {
-        Window { start: 0, size: 0 }
-    }
 
     pub fn set_cursor(&mut self, cursor: &Cursor) {
         info!("Setting cursor to {:?}", cursor);

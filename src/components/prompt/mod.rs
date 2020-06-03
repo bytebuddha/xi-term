@@ -1,10 +1,9 @@
-mod prompt;
-pub use self::prompt::Prompt;
+mod message;
+pub use self::message::Message;
 
-mod event;
+mod handler;
 
-use tui::style::Color;
-
+use actions::parse_action;
 use actions::Action;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -15,42 +14,60 @@ pub enum PromptResponse {
     Cancel
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Message {
-    pub text: String,
-    pub title: Option<String>,
-    pub border_fg: Color,
-    pub border_bg: Color,
-    pub title_fg: Color,
-    pub title_bg: Color
+
+#[derive(Default)]
+pub struct Prompt {
+    pub message: Option<Message>,
+    pub dex: usize,
+    pub chars: String
 }
 
-impl Message {
+impl Prompt {
 
-    pub fn error(text: String) -> Message {
-        Message {
-            text,
-            title: Some("Error".into()),
-            border_fg: Color::Red,
-            border_bg: Color::DarkGray,
-            title_fg: Color::LightYellow,
-            title_bg: Color::DarkGray
+    pub fn set_message(&mut self, msg: Message) {
+        self.message = Some(msg);
+    }
+
+    pub fn left(&mut self) -> PromptResponse {
+        if self.dex > 0 {
+            self.dex -= 1;
+        }
+        PromptResponse::Continue
+    }
+
+    pub fn right(&mut self) -> PromptResponse {
+        if self.dex < self.chars.len() {
+            self.dex += 1;
+        }
+        PromptResponse::Continue
+    }
+
+    pub fn delete(&mut self) -> PromptResponse {
+        if self.dex < self.chars.len() {
+            self.chars.remove(self.dex);
+        }
+        PromptResponse::Continue
+    }
+
+    pub fn back(&mut self) -> PromptResponse {
+        if !self.chars.is_empty() && self.dex > 0 {
+            self.dex -= 1;
+            self.chars.remove(self.dex);
+            PromptResponse::Continue
+        } else {
+            PromptResponse::Cancel
         }
     }
 
-    pub fn info(text: String) -> Message {
-        Message {
-            text,
-            title: None,
-            border_fg: Color::Blue,
-            border_bg: Color::DarkGray,
-            title_fg: Color::Cyan,
-            title_bg: Color::DarkGray
-        }
+    pub fn new_key(&mut self, chr: char) -> PromptResponse {
+        self.chars.insert(self.dex, chr);
+        self.dex += 1;
+        PromptResponse::Continue
     }
 
-    pub fn title<S: Into<String>>(mut self, s: S) -> Message {
-        self.title = Some(s.into());
-        self
+    /// Gets called when return is pressed,
+    pub fn finalize(&mut self) -> PromptResponse {
+        info!("Received input: {}", self.chars);
+        parse_action(&self.chars)
     }
 }

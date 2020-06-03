@@ -1,3 +1,4 @@
+#[allow(clippy::module_inception)]
 mod editor;
 pub use self::editor::Editor;
 

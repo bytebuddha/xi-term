@@ -3,20 +3,20 @@ use tui::buffer::Buffer;
 use tui::widgets::{ Widget, Borders, Block };
 use tui::style::{ Style, Color };
 
-pub struct LogWidget {
-
+pub struct CurrentViewWidget {
+    
 }
 
-impl LogWidget {
+impl CurrentViewWidget {
 
-    pub fn new() -> LogWidget {
-        LogWidget {
+    pub fn new() -> CurrentViewWidget {
+        CurrentViewWidget {
 
         }
     }
 }
 
-impl Widget for LogWidget {
+impl Widget for CurrentViewWidget {
 
     fn render(self, area: Rect, buf: &mut Buffer) {
         Block::default()

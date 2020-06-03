@@ -64,9 +64,11 @@ impl XiTerm {
         let XiTerm { term, editor, prompt, dev, .. } = self;
         if dev.is_some() {
             term.draw(|mut f| {
-                let rect = f.size();
-                let widget = DevWidget::new();
-                f.render_stateful_widget(widget, rect, dev.as_mut().unwrap());
+                f.render_stateful_widget(
+                    DevWidget::default(),
+                    f.size(),
+                    dev.as_mut().unwrap()
+                );
             })?;
             return Ok(());
         }
@@ -75,7 +77,7 @@ impl XiTerm {
             let mut rect = None;
             term.draw(|mut f| {
                 let prompt_rect = f.size();
-                let editor_widget = EditorWidget::new();
+                let editor_widget = EditorWidget::default();
                 f.render_stateful_widget(editor_widget, prompt_rect, editor);
                 let prompt = PromptWidget::new(&prompt);
                 f.render_widget(prompt, prompt_rect);
@@ -92,7 +94,7 @@ impl XiTerm {
             let mut rect = None;
             term.draw(|mut f| {
                 let editor_rect = f.size();
-                let editor_widget = EditorWidget::new();
+                let editor_widget = EditorWidget::default();
                 f.render_stateful_widget(editor_widget, editor_rect, editor);
                 rect = Some(EditorWidget::calculate_view_rect(editor.display_title_bar, editor.display_gutter, editor_rect));
             })?;
@@ -113,18 +115,15 @@ impl XiTerm {
         match self.editor.poll() {
             Ok(Async::NotReady) => {
                 debug!("no more editor event, done polling");
-                return;
             }
             Ok(Async::Ready(_)) => {
                 info!("The editor exited normally. Shutting down the TUI");
                 self.exit = true;
-                return;
             }
             Err(e) => {
                 error!("The editor exited with an error: {:?}", e);
                 error!("Shutting down the TUI.");
                 self.exit = true;
-                return;
             }
         }
     }

@@ -29,6 +29,7 @@ pub enum UiAction {
     HidePrompt,
     ToggleTitleBar,
     ToggleLineNumbers,
+    ToggleDebugWidget,
     ShowDebugWidget,
     HideDebugWidget
 }

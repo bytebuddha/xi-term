@@ -55,7 +55,7 @@ impl <'a, 'b>Chunk<'a, 'b> {
 impl <'a, 'b>Widget for Chunk<'a, 'b> {
 
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if self.text.len() == 0 {
+        if self.text.is_empty() {
             if let Some(background) = self.background {
                 buf.set_background(area, background);
             }

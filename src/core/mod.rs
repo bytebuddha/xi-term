@@ -19,5 +19,5 @@ pub fn init_panic_handler() {
 
 pub fn get_config_directory() -> Option<String> {
     BaseDirectories::with_prefix("xi").ok()
-        .and_then(|dirs| Some(dirs.get_config_home().to_string_lossy().into_owned()))
+        .map(|dirs| dirs.get_config_home().to_string_lossy().into_owned())
 }

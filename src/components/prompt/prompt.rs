@@ -1,6 +1,7 @@
 use actions::parse_action;
 use super::{ PromptResponse, Message };
 
+#[derive(Default)]
 pub struct Prompt {
     pub message: Option<Message>,
     pub dex: usize,
@@ -8,14 +9,6 @@ pub struct Prompt {
 }
 
 impl Prompt {
-
-    pub fn new() -> Prompt {
-        Prompt {
-            message: None,
-            dex: 0,
-            chars: String::new()
-        }
-    }
 
     pub fn set_message(&mut self, msg: Message) {
         self.message = Some(msg);

@@ -35,13 +35,10 @@ impl EventHandler for View {
                     MouseEvent::ScrollUp(_, _, _) => self.client.up(),
                     MouseEvent::ScrollDown(_, _, _) => self.client.down(),
                     MouseEvent::Down(btn, x, y, _) => {
-                        match btn {
-                            MouseButton::Left => {
-                                if let Some(rect) = self.rect {
-                                    self.click(rect, u64::from(y), u64::from(x));
-                                }
-                            },
-                            _ => {}
+                        if let MouseButton::Left = btn {
+                            if let Some(rect) = self.rect {
+                                self.click(rect, u64::from(y), u64::from(x));
+                            }
                         }
                     },
                     _ => {}

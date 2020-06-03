@@ -3,7 +3,7 @@ use clap::{ clap_app, AppSettings, ArgMatches, Error as ClapError };
 use super::*;
 use components::{ PromptResponse, Message };
 
-const HELP_TEMPLATE: &'static str ="USAGE:
+const HELP_TEMPLATE: &str ="USAGE:
 
     {usage}
 
@@ -104,7 +104,7 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
 }
 
 pub fn parse_action(input: &str) -> PromptResponse {
-    let q = input.split(" ").collect::<Vec<&str>>();
+    let q = input.split(' ').collect::<Vec<&str>>();
     match get_matches(q) {
         Ok(matches) => {
             parse_matches(matches)
@@ -115,7 +115,7 @@ pub fn parse_action(input: &str) -> PromptResponse {
     }
 }
 
-fn parse_matches<'a>(matches: ArgMatches<'a>) -> PromptResponse {
+fn parse_matches(matches: ArgMatches<'_>) -> PromptResponse {
     if let Some(command) = matches.values_of("cmd") {
         return PromptResponse::Action(Action::ShellCommand(command.map(|item|item.to_string()).collect()));
     }
