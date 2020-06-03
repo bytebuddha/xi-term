@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use super::XiTerm;
-use components::{ Prompt, EditorResponse, Message };
+use components::{ Dev, Prompt, EditorResponse, Message };
 use core::ActionHandler;
 use actions::{ Action, SystemAction, UiAction };
 
@@ -46,6 +46,8 @@ impl ActionHandler<Action> for XiTerm {
             Action::Ui(action) => {
                 match action {
                     UiAction::ShowPrompt => self.prompt = Some(Prompt::new()),
+                    UiAction::ShowDebugWidget => {self.dev = Some(Dev::new());self.prompt = None},
+                    UiAction::HideDebugWidget => self.dev = None,
                     UiAction::HidePrompt => self.prompt = None,
                     UiAction::ToggleTitleBar => {
                         if self.editor.display_title_bar {

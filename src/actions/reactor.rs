@@ -46,6 +46,9 @@ impl Default for ActionReactor {
 
         let event = Event::Key(KeyEvent { code: KeyCode::Char('p'), modifiers });
         reactor.insert(event, vec![Action::Ui(UiAction::ShowPrompt)]).unwrap();
+
+        let event = Event::Key(KeyEvent { code: KeyCode::F(12), modifiers: KeyModifiers::empty() });
+        reactor.insert(event, vec![Action::Ui(UiAction::ShowDebugWidget)]).unwrap();
         reactor
     }
 }

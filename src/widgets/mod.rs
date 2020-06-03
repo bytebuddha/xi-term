@@ -6,3 +6,6 @@ pub use self::view::{ ViewWidget };
 
 pub mod prompt;
 pub use self::prompt::PromptWidget;
+
+mod dev;
+pub use self::dev::DevWidget;

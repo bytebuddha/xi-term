@@ -76,6 +76,7 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
                 (setting: AppSettings::SubcommandRequiredElseHelp)
                 (@subcommand title =>)
                 (@subcommand lines =>)
+                (@subcommand debug =>)
             )
     ).get_matches_from_safe(input)
 }
@@ -107,6 +108,7 @@ fn parse_settings_matches<'a>(matches: &ArgMatches<'a>) -> PromptResponse {
     match matches.subcommand() {
         ("title", _) => PromptResponse::Action(Action::Ui(UiAction::ToggleTitleBar)),
         ("lines", _) => PromptResponse::Action(Action::Ui(UiAction::ToggleLineNumbers)),
+        ("debug", _) => PromptResponse::Action(Action::Ui(UiAction::ShowDebugWidget)),
         (cmd, _) => PromptResponse::Message(Message::error(format!("Unknown Settings Command: '{}'", cmd)))
     }
 }

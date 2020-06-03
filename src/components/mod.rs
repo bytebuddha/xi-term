@@ -8,3 +8,6 @@ pub use self::editor::{ Editor, EditorResponse };
 
 mod prompt;
 pub use self::prompt::{ Prompt, PromptResponse, Message };
+
+mod dev;
+pub use self::dev::{ Dev, DevResponse };

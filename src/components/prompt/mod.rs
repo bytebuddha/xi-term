@@ -33,7 +33,7 @@ impl Message {
             title: Some("Error".into()),
             border_fg: Color::Red,
             border_bg: Color::DarkGray,
-            title_fg: Color::Yellow,
+            title_fg: Color::LightYellow,
             title_bg: Color::DarkGray
         }
     }

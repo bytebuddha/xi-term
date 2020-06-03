@@ -13,8 +13,8 @@ use failure::Error;
 use core::{ EventHandler, RenderCursor };
 use actions::ActionReactor;
 use ui::{Terminal, TerminalEvent};
-use components::{ Editor, Prompt };
-use widgets::{ PromptWidget, EditorWidget };
+use components::{ Editor, Prompt, Dev };
+use widgets::{ PromptWidget, EditorWidget, DevWidget };
 
 pub struct XiTerm {
     /// The editor holds the text buffers (named "views" in xi
@@ -29,6 +29,7 @@ pub struct XiTerm {
 
     pub actions: ActionReactor,
     pub prompt: Option<Prompt>,
+    pub dev: Option<Dev>,
 
     /// Whether the editor is shutting down.
     pub exit: bool,
@@ -46,6 +47,7 @@ impl XiTerm {
             exit: false,
             editor: Editor::new(client),
             prompt: None,
+            dev: None,
             core_events: events,
             actions: ActionReactor::default(),
             current_size: None
@@ -59,7 +61,15 @@ impl XiTerm {
 
     fn render(&mut self) -> Result<(), Error> {
 
-        let XiTerm { term, editor, prompt, .. } = self;
+        let XiTerm { term, editor, prompt, dev, .. } = self;
+        if dev.is_some() {
+            term.draw(|mut f| {
+                let rect = f.size();
+                let widget = DevWidget::new();
+                f.render_stateful_widget(widget, rect, dev.as_mut().unwrap());
+            })?;
+            return Ok(());
+        }
 
         if let Some(prompt) = &prompt {
             let mut rect = None;

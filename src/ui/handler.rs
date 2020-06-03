@@ -1,7 +1,7 @@
-use crossterm::event::{ Event, KeyModifiers, KeyCode };
+use crossterm::event::Event;
 
 use super::XiTerm;
-use components::PromptResponse;
+use components::{ PromptResponse, DevResponse };
 use crate::core::{ EventHandler, ActionHandler };
 
 impl EventHandler for XiTerm {
@@ -13,18 +13,17 @@ impl EventHandler for XiTerm {
                 return;
             }
         } else {
-            let event = match event {
-                Event::Key(event) => {
-                    if event.modifiers.contains(KeyModifiers::CONTROL) {
-                        if let KeyCode::Char('c') = event.code {
-                            return;
-                        }
-                    }
-                    Event::Key(event)
-                },
-                event => event
-            };
-
+            let mut close_dev = false;
+            if let Some(dev) = &mut self.dev {
+                match dev.handle_event(event) {
+                    DevResponse::Close => close_dev = true,
+                    DevResponse::Continue => {},
+                }
+            }
+            if close_dev {
+                self.dev = None;
+                return;
+            }
             if let Some(prompt) = &mut self.prompt {
                 match prompt.handle_event(event) {
                     PromptResponse::Continue => {},

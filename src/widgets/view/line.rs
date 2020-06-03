@@ -37,10 +37,11 @@ impl <'a, 'b, 'c, 'd>Widget for LineWidget<'a, 'b, 'c, 'd> {
 
     fn render(self, area: Rect, buf: &mut Buffer) {
         if let Some(line) = self.line {
-            let mut current_step = area.x as usize;
+            let mut current_step = area.x as i64;
+            error!("Rect: {:?}", area);
             for style_def in &line.styles {
                 if let Some(style) = self.styles.get(&style_def.style_id) {
-                    let start = style_def.offset as usize + current_step;
+                    let start = style_def.offset + current_step;
                     let chunk_rect = Rect {
                         x: start as u16,
                         y: area.y,
@@ -48,15 +49,14 @@ impl <'a, 'b, 'c, 'd>Widget for LineWidget<'a, 'b, 'c, 'd> {
                         height: area.height
                     };
 
-                    Chunk::new(&line.text[start - area.x as usize..])
-                            .background(style.bg_color.map(|item|u32_to_color(item)))
-                            .foreground(style.fg_color.map(|item|u32_to_color(item)))
-                            .theme(self.theme)
-                            .italic(style.italic)
-                            .underlined(style.underline)
-                            .render(chunk_rect, buf);
-
-                    current_step = start + style_def.length as usize;
+                    Chunk::new(&line.text[(start - area.x as i64) as usize..])
+                        .background(style.bg_color.map(|item|u32_to_color(item)))
+                        .foreground(style.fg_color.map(|item|u32_to_color(item)))
+                        .theme(self.theme)
+                        .italic(style.italic)
+                        .underlined(style.underline)
+                        .render(chunk_rect, buf);
+                    current_step = start + style_def.length as i64;
                 }
             }
         }
