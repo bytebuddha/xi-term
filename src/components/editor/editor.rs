@@ -102,7 +102,6 @@ impl Future for Editor {
                     let mut view = View::new(client);
                     view.resize(EditorWidget::calculate_height_offset(self.display_title_bar, self.size.1));
                     self.views.insert(view_id, view);
-                    info!("switching to view {:?}", view_id);
                     self.current_view = view_id;
                 }
                 // We own one of the senders so this cannot happen
@@ -125,7 +124,7 @@ impl Editor {
 
     /// Handle terminal size changes
     pub fn handle_resize(&mut self, size: (u16, u16)) {
-        info!("setting new terminal size");
+        debug!("setting new terminal size: {:?}", size);
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
             view.resize(EditorWidget::calculate_height_offset(self.display_title_bar, size.1));
@@ -143,7 +142,7 @@ impl Editor {
                 XiNotification::ConfigChanged(config) => self.config_changed(config),
                 XiNotification::AvailableThemes(themes) => self.themes = themes.themes,
                 XiNotification::AvailableLanguages(languages) => self.languages = languages.languages,
-                _ => info!("ignoring Xi core notification: {:?}", notification),
+                _ => warn!("ignoring Xi core notification: {:?}", notification),
             },
             CoreEvent::MeasureWidth((_request, _result_tx)) => unimplemented!(),
         }
@@ -162,6 +161,8 @@ impl Editor {
     fn config_changed(&mut self, changes: ConfigChanged) {
         if let Some(view) = self.views.get_mut(&changes.view_id) {
             view.config_changed(changes.changes);
+        } else {
+            warn!("Received ConfigChanged for a view not in the editor {}", &changes.view_id);
         }
     }
 
@@ -177,6 +178,7 @@ impl Editor {
 
     /// Handle a "def_style" notification from Xi core.
     fn def_style(&mut self, style: Style) {
+        debug!("Inserting style into the style cache: {:?}", style);
         self.styles.insert(style.id, style);
     }
 

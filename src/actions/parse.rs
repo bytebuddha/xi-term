@@ -22,21 +22,31 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
             (global_setting: AppSettings::ColorNever)
             (@arg cmd: +raw +takes_value )
             (@subcommand editor =>
+                (about: "Manage the editor")
                 (setting: AppSettings::SubcommandRequiredElseHelp)
                 (template: HELP_TEMPLATE)
                 (@subcommand view =>
+                    (about: "Mange editor views")
                     (setting: AppSettings::SubcommandRequiredElseHelp)
                     (template: HELP_TEMPLATE)
                     (@subcommand save =>
+                         (about: "Save the current buffer")
                          (template: HELP_TEMPLATE)
                          (@arg file: -f --file +takes_value "The file name to save the current view as")
                     )
-                    (@subcommand next => )
-                    (@subcommand prev => )
+                    (@subcommand next =>
+                        (about: "Move the the next view")
+                    )
+                    (@subcommand prev =>
+                        (about: "Move to the previous buffer")
+                    )
                     (@subcommand lang =>
                         (setting: AppSettings::SubcommandRequiredElseHelp)
-                        (@subcommand list =>)
+                        (@subcommand list =>
+                            (about: "List all available languages")
+                        )
                         (@subcommand set =>
+                            (about: "Set the language of the current view")
                             (@arg lang: -l --lang +required +takes_value "The name of the language to set")
                         )
                     )
@@ -61,22 +71,34 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
                     )
                 )
                 (@subcommand theme =>
+                    (about: "Manage syntax themes")
                     (setting: AppSettings::SubcommandRequiredElseHelp)
-                    (@subcommand list =>)
+                    (@subcommand list =>
+                         (about: "List all available syntax themes")
+                    )
                     (@subcommand set =>
+                        (about: "Set the syntax theme in use")
                         (@arg theme: -t --theme +required +takes_value "The name of the theme to set")
                     )
                 )
                 (@subcommand open =>
+                    (about: "Open a new file")
                     (@arg file_name: -f --file +takes_value "The flie name to open")
                 )
             )
             (@subcommand settings =>
+                (about: "Modify the editor settings")
                 (template: HELP_TEMPLATE)
                 (setting: AppSettings::SubcommandRequiredElseHelp)
-                (@subcommand title =>)
-                (@subcommand lines =>)
-                (@subcommand debug =>)
+                (@subcommand title =>
+                    (about: "Toggle displaying the title bar")
+                )
+                (@subcommand lines =>
+                    (about: "Toggle displaying the syntax gutter")
+                )
+                (@subcommand debug =>
+                    (about: "Toggle the Developer Tools")
+                )
             )
     ).get_matches_from_safe(input)
 }

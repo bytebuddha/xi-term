@@ -108,7 +108,6 @@ impl View {
 
     pub fn click(&mut self, rect: Rect, x: u64, y: u64) {
         let (line, column) = self.get_click_location(rect, x, y);
-        error!("CLick Location: {}, {}", line, column);
         self.client.click(line, column);
     }
 

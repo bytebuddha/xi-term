@@ -38,7 +38,6 @@ impl EventHandler for View {
                         match btn {
                             MouseButton::Left => {
                                 if let Some(rect) = self.rect {
-                                    error!("Click Rect: {:?}", rect);
                                     self.click(rect, u64::from(y), u64::from(x));
                                 }
                             },

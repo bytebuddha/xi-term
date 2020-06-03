@@ -38,7 +38,6 @@ impl <'a, 'b, 'c, 'd>Widget for LineWidget<'a, 'b, 'c, 'd> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         if let Some(line) = self.line {
             let mut current_step = area.x as i64;
-            error!("Rect: {:?}", area);
             for style_def in &line.styles {
                 if let Some(style) = self.styles.get(&style_def.style_id) {
                     let start = style_def.offset + current_step;

@@ -30,7 +30,6 @@ impl <'a>Widget for PromptWidget<'a> {
             let line_count = lines.len() as u16;
             let y = area.y + area.height - 3 - line_count;
             let msg_box_rect = Rect { x: area.x, y, width: area.width, height: line_count + 2};
-            error!("msg_box_rect: {:?}", msg_box_rect);
             MessageBox::new(&msg).wrapped(lines.iter().map(|item| item.to_string()).collect()).render(msg_box_rect, buf);
         }
 
