@@ -16,4 +16,5 @@ indexmap = "1.4.0"
 xrl = "0.0.8"
 tui = { git = "https://github.com/fdehau/tui-rs", features = ["crossterm"] }
 textwrap = "0.11"
+serde = "*"
 serde_json = "*"

@@ -59,7 +59,7 @@ impl ActionHandler<Action> for XiTerm {
                     },
                     UiAction::HidePrompt => self.prompt = None,
                     UiAction::ToggleTitleBar => {
-                        match self.editor.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                        match self.editor.config.get_default("display_title_bar", Value::Bool(DEFAULT_DISPLAY_TITLE_BAR)) {
                             Value::Bool(true) => self.editor.config.insert_value("display_title_bar", Value::Bool(false)),
                             Value::Bool(false) => self.editor.config.insert_value("display_title_bar", Value::Bool(true)),
                             value => warn!("Invalid Value for `display_title_bar`: {:?}", value)
@@ -67,7 +67,7 @@ impl ActionHandler<Action> for XiTerm {
                         self.prompt = None;
                     },
                     UiAction::ToggleLineNumbers => {
-                        match self.editor.config.get_default("display_gutter", DEFAULT_DISPLAY_GUTTER) {
+                        match self.editor.config.get_default("display_gutter", Value::Bool(DEFAULT_DISPLAY_GUTTER)) {
                             Value::Bool(true) => self.editor.config.insert_value("display_gutter", Value::Bool(false)),
                             Value::Bool(false) => self.editor.config.insert_value("display_gutter", Value::Bool(true)),
                             value => warn!("Invalid Value for `display_gutter`: {:?}", value)

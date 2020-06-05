@@ -1,6 +1,5 @@
 use std::io::{self, Stdout, stdout};
 
-use serde_json::Value;
 use futures::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::sync::oneshot::{self, Receiver, Sender};
 use futures::{Async, Future, Poll, Sink, Stream};
@@ -95,17 +94,8 @@ impl XiTerm {
                 let editor_rect = f.size();
                 let editor_widget = EditorWidget::default();
                 f.render_stateful_widget(editor_widget, editor_rect, editor);
-                let display_gutter = if let Value::Bool(true) = editor.config.get_default("display_gutter", DEFAULT_DISPLAY_GUTTER) {
-                    true
-                } else {
-                    false
-                };
-
-                let display_title_bar = if let Value::Bool(true) = editor.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
-                    true
-                } else {
-                    false
-                };
+                let display_gutter = editor.config.get_from_value_default("display_gutter", DEFAULT_DISPLAY_GUTTER);
+                let display_title_bar = editor.config.get_from_value_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR);
                 rect = Some(EditorWidget::calculate_view_rect(display_title_bar, display_gutter, editor_rect));
             })?;
             if let Some(size) = rect {

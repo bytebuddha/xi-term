@@ -45,4 +45,13 @@ impl Configuration {
             value
         }
     }
+
+    pub fn get_from_value_default<T: serde::de::DeserializeOwned>(&self, key: &str, value: T) -> T {
+        if let Some(val) = self.data.get(key) {
+            if let Ok(fin) = serde_json::from_value::<T>(val.clone()) {
+                return fin;
+            }
+        }
+        value
+    }
 }

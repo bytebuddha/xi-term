@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use futures::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use futures::{Async, Future, Poll, Stream};
 
-use serde_json::Value;
 use indexmap::IndexMap;
 use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification, ConfigChanged};
 
@@ -103,11 +102,7 @@ impl Future for Editor {
                     info!("creating new view {:?}", view_id);
                     let client = ViewClient::new(self.client.clone(), view_id);
                     let mut view = View::new(client);
-                    let title_bar = if let Value::Bool(true) = self.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
-                        true
-                    } else {
-                        false
-                    };
+                    let title_bar = self.config.get_from_value_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR);
                     view.resize(EditorWidget::calculate_height_offset(title_bar, self.size.1));
                     self.views.insert(view_id, view);
                     self.current_view = view_id;
@@ -135,11 +130,7 @@ impl Editor {
         debug!("setting new terminal size: {:?}", size);
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
-            let title_bar = if let Value::Bool(true) = self.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
-                true
-            } else {
-                false
-            };
+            let title_bar = self.config.get_from_value_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR);
             view.resize(EditorWidget::calculate_height_offset(title_bar, size.1));
         }
     }
