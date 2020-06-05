@@ -5,8 +5,8 @@ use xrl;
 use crate::actions::FindAction;
 
 pub struct Client {
-    inner: xrl::Client,
-    view_id: xrl::ViewId,
+    pub inner: xrl::Client,
+    pub view_id: xrl::ViewId,
 }
 
 impl Client {

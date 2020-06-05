@@ -1,8 +1,10 @@
+use serde_json::Value;
+
 use std::process::Command;
 
 use super::XiTerm;
 use components::{ Dev, Prompt, EditorResponse, Message };
-use core::ActionHandler;
+use core::{ ActionHandler, consts::{ DEFAULT_DISPLAY_GUTTER, DEFAULT_DISPLAY_TITLE_BAR } };
 use actions::{ Action, SystemAction, UiAction };
 
 impl ActionHandler<Action> for XiTerm {
@@ -57,25 +59,19 @@ impl ActionHandler<Action> for XiTerm {
                     },
                     UiAction::HidePrompt => self.prompt = None,
                     UiAction::ToggleTitleBar => {
-                        if self.editor.display_title_bar {
-                            if let Some((width, height)) = self.current_size {
-                                self.handle_resize((width, height + 1));
-                            }
-                        } else if let Some((width, height)) = self.current_size {
-                            self.handle_resize((width, height - 1));
+                        match self.editor.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                            Value::Bool(true) => self.editor.config.insert_value("display_title_bar", Value::Bool(false)),
+                            Value::Bool(false) => self.editor.config.insert_value("display_title_bar", Value::Bool(true)),
+                            value => warn!("Invalid Value for `display_title_bar`: {:?}", value)
                         }
-                        self.editor.display_title_bar = !self.editor.display_title_bar;
                         self.prompt = None;
                     },
                     UiAction::ToggleLineNumbers => {
-                        if self.editor.display_gutter {
-                            if let Some((width, height)) = self.current_size {
-                                self.handle_resize((width, height + 4));
-                            }
-                        } else if let Some((width, height)) = self.current_size {
-                            self.handle_resize((width, height - 1));
+                        match self.editor.config.get_default("display_gutter", DEFAULT_DISPLAY_GUTTER) {
+                            Value::Bool(true) => self.editor.config.insert_value("display_gutter", Value::Bool(false)),
+                            Value::Bool(false) => self.editor.config.insert_value("display_gutter", Value::Bool(true)),
+                            value => warn!("Invalid Value for `display_gutter`: {:?}", value)
                         }
-                        self.editor.display_gutter = !self.editor.display_gutter;
                         self.prompt = None
                     }
                 }

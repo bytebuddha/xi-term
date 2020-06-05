@@ -1,3 +1,5 @@
+pub mod consts;
+
 mod logs;
 pub use self::logs::configure_logs;
 

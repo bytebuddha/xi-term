@@ -14,20 +14,6 @@ impl EventHandler for Dev {
                     KeyCode::Char('q') => {
                         return DevResponse::Close;
                     },
-                    KeyCode::Right => {
-                        if self.current_tab == 1 {
-                            self.current_tab = 0;
-                        } else {
-                            self.current_tab += 1;
-                        }
-                    },
-                    KeyCode::Left => {
-                        if self.current_tab == 0 {
-                            self.current_tab = 1;
-                        } else {
-                            self.current_tab -= 1;
-                        }
-                    },
                     _ => {}
                 }
         }

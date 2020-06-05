@@ -6,15 +6,7 @@ pub enum DevResponse {
     Close
 }
 
+#[derive(Default)]
 pub struct Dev {
-    pub current_tab: usize
-}
 
-impl Default for Dev {
-
-    fn default() -> Dev {
-        Dev {
-            current_tab: 0
-        }
-    }
 }

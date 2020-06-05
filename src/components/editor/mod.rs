@@ -2,6 +2,9 @@
 mod editor;
 pub use self::editor::Editor;
 
+mod configuration;
+pub use self::configuration::Configuration;
+
 mod handler;
 mod actions;
 

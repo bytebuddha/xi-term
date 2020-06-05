@@ -1,5 +1,6 @@
 use std::io::{self, Stdout, stdout};
 
+use serde_json::Value;
 use futures::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use futures::sync::oneshot::{self, Receiver, Sender};
 use futures::{Async, Future, Poll, Sink, Stream};
@@ -10,32 +11,30 @@ use xrl::{Client, Frontend, MeasureWidth, XiNotification};
 
 use failure::Error;
 
-use core::{ EventHandler, RenderCursor };
+use core::{ EventHandler, RenderCursor, consts::DEFAULT_DISPLAY_GUTTER };
+use core::consts::DEFAULT_DISPLAY_TITLE_BAR;
 use actions::ActionReactor;
 use ui::{Terminal, TerminalEvent};
 use components::{ Editor, Prompt, Dev };
 use widgets::{ PromptWidget, EditorWidget, DevWidget };
 
 pub struct XiTerm {
-    /// The editor holds the text buffers (named "views" in xi
-    /// terminology).
-    pub editor: Editor,
 
+    /// Whether the editor is shutting down.
+    pub exit: bool,
     /// The terminal is used to draw on the screen a get inputs from
     /// the user.
     pub terminal: Terminal,
     pub term: TuiTerminal<CrosstermBackend<Stdout>>,
     pub current_size: Option<(u16, u16)>,
-
     pub actions: ActionReactor,
-    pub prompt: Option<Prompt>,
-    pub dev: Option<Dev>,
-
-    /// Whether the editor is shutting down.
-    pub exit: bool,
-
     /// Stream of messages from Xi core.
     pub core_events: UnboundedReceiver<CoreEvent>,
+    /// The editor holds the text buffers (named "views" in xi
+    /// terminology).
+    pub editor: Editor,
+    pub prompt: Option<Prompt>,
+    pub dev: Option<Dev>,
 }
 
 impl XiTerm {
@@ -65,7 +64,7 @@ impl XiTerm {
         if dev.is_some() {
             term.draw(|mut f| {
                 f.render_stateful_widget(
-                    DevWidget::default(),
+                    DevWidget::new(&editor),
                     f.size(),
                     dev.as_mut().unwrap()
                 );
@@ -96,7 +95,18 @@ impl XiTerm {
                 let editor_rect = f.size();
                 let editor_widget = EditorWidget::default();
                 f.render_stateful_widget(editor_widget, editor_rect, editor);
-                rect = Some(EditorWidget::calculate_view_rect(editor.display_title_bar, editor.display_gutter, editor_rect));
+                let display_gutter = if let Value::Bool(true) = editor.config.get_default("display_gutter", DEFAULT_DISPLAY_GUTTER) {
+                    true
+                } else {
+                    false
+                };
+
+                let display_title_bar = if let Value::Bool(true) = editor.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                    true
+                } else {
+                    false
+                };
+                rect = Some(EditorWidget::calculate_view_rect(display_title_bar, display_gutter, editor_rect));
             })?;
             if let Some(size) = rect {
                 if let Some(view) = editor.views.get(&editor.current_view) {

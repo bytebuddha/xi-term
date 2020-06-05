@@ -2,15 +2,21 @@ use std::collections::HashMap;
 use futures::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use futures::{Async, Future, Poll, Stream};
 
+use serde_json::Value;
 use indexmap::IndexMap;
 use xrl::{ThemeChanged, Client, ScrollTo, Style, Update, ViewId, XiNotification, ConfigChanged};
 
+use super::Configuration;
+use core::consts::DEFAULT_DISPLAY_TITLE_BAR;
 use ui::CoreEvent;
 use widgets::EditorWidget;
 use components::{View, ViewClient, EditorResponse};
 
 /// The main interface to xi-core
 pub struct Editor {
+
+    /// Main Configuration for Xi-Term,
+    pub config: Configuration,
     /// Channel from which the responses to "new_view" requests are
     /// received. Upon receiving a `ViewId`, the `Editdor` creates a
     /// new view.
@@ -44,8 +50,6 @@ pub struct Editor {
     pub theme: Option<ThemeChanged>,
     pub languages: Vec<String>,
     pub themes: Vec<String>,
-    pub display_title_bar: bool,
-    pub display_gutter: bool
 }
 
 /// Methods for general use.
@@ -67,8 +71,7 @@ impl Editor {
             theme: None,
             themes: vec![],
             languages: vec![],
-            display_title_bar: true,
-            display_gutter: true
+            config: Default::default()
         }
     }
 }
@@ -100,7 +103,12 @@ impl Future for Editor {
                     info!("creating new view {:?}", view_id);
                     let client = ViewClient::new(self.client.clone(), view_id);
                     let mut view = View::new(client);
-                    view.resize(EditorWidget::calculate_height_offset(self.display_title_bar, self.size.1));
+                    let title_bar = if let Value::Bool(true) = self.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                        true
+                    } else {
+                        false
+                    };
+                    view.resize(EditorWidget::calculate_height_offset(title_bar, self.size.1));
                     self.views.insert(view_id, view);
                     self.current_view = view_id;
                 }
@@ -127,7 +135,12 @@ impl Editor {
         debug!("setting new terminal size: {:?}", size);
         self.size = size;
         for (_view_id, view) in self.views.iter_mut() {
-            view.resize(EditorWidget::calculate_height_offset(self.display_title_bar, size.1));
+            let title_bar = if let Value::Bool(true) = self.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                true
+            } else {
+                false
+            };
+            view.resize(EditorWidget::calculate_height_offset(title_bar, size.1));
         }
     }
 

@@ -4,10 +4,12 @@ pub use self::title_bar::TitleBar;
 mod gutter;
 pub use self::gutter::Gutter;
 
+use serde_json::Value;
 use tui::layout::Rect;
 use tui::buffer::Buffer;
 use tui::widgets::{ Widget, StatefulWidget };
 
+use core::consts::{ DEFAULT_DISPLAY_GUTTER, DEFAULT_DISPLAY_TITLE_BAR };
 use widgets::{ ViewWidget };
 use crate::components::Editor;
 
@@ -74,17 +76,32 @@ impl StatefulWidget for EditorWidget {
     type State = Editor;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
-        if state.display_title_bar {
+        if let Value::Bool(true) = state.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
             let title_bar_rect = EditorWidget::calculate_title_bar_rect(area);
             TitleBar::new(&state).render(title_bar_rect, buf);
         }
         if let Some(view) = state.views.get_mut(&state.current_view) {
-            let view_rect = EditorWidget::calculate_view_rect(state.display_title_bar, state.display_gutter, area);
+            let display_gutter = if let Value::Bool(true) = state.config.get_default("display_gutter", DEFAULT_DISPLAY_GUTTER) {
+                true
+            } else {
+                false
+            };
+            let display_title = if let Value::Bool(true) = state.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                true
+            } else {
+                false
+            };
+            let view_rect = EditorWidget::calculate_view_rect(display_title, display_gutter, area);
             ViewWidget::new(&state.styles).theme(state.theme.as_ref()).render(view_rect, buf, view);
             view.rect = Some(view_rect);
 
-            if state.display_gutter {
-                let gutter_rect = self.calculate_gutter_rect(state.display_title_bar, area);
+            if let Value::Bool(true) = state.config.get_default("display_gutter", DEFAULT_DISPLAY_GUTTER) {
+                let title_bar = if let Value::Bool(true) = state.config.get_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR) {
+                    true
+                } else {
+                    false
+                };
+                let gutter_rect = self.calculate_gutter_rect(title_bar, area);
                 Gutter::new(&view).start(view.cache.before()).theme(state.theme.as_ref()).render(gutter_rect, buf);
             }
         }
