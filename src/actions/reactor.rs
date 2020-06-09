@@ -29,6 +29,11 @@ impl ActionReactor {
         Ok(())
     }
 
+    pub fn remove(&mut self, ev: Event) -> Result<(), ReactorError> {
+        self.data.remove(&ev);
+        Ok(())
+    }
+
     pub fn event_to_action(&self, ev: &Event) -> Option<Vec<Action>> {
         self.data.get(ev).map(|item| item.to_vec())
     }

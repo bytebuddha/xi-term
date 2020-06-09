@@ -90,14 +90,28 @@ fn get_matches(input: Vec<&str>) -> Result<ArgMatches<'static>, ClapError> {
                 (about: "Modify the editor settings")
                 (template: HELP_TEMPLATE)
                 (setting: AppSettings::SubcommandRequiredElseHelp)
-                (@subcommand title =>
-                    (about: "Toggle displaying the title bar")
-                )
-                (@subcommand lines =>
-                    (about: "Toggle displaying the syntax gutter")
-                )
-                (@subcommand debug =>
-                    (about: "Toggle the Developer Tools")
+                (@subcommand config =>
+                    (about: "Modify configuration variables for the editor")
+                    (setting: AppSettings::SubcommandRequiredElseHelp)
+                    (template: HELP_TEMPLATE)
+                    (@subcommand get =>
+                       (about: "Get the value of a configuration key")
+                       (@arg key: -k --key +takes_value +required "Get the current value for a configuration variable")
+                    )
+                    (@subcommand set =>
+                       (about: "Set the value of a configuration key")
+                       (@arg key: -k --key +takes_value +required "The configuration key to override")
+                       (@arg value: -v --value +takes_value +required "The JSON value to use")
+                    )
+                    (@subcommand bind =>
+                       (about: "Bind an event to a group of actions")
+                       (@arg event: -e --event +takes_value +multiple +required "The event to bind to")
+                       (@arg actions: -a --actions +takes_value +multiple +required "The actions to perform")
+                    )
+                    (@subcommand unbind =>
+                       (about: "UnBind an event to a group of actions")
+                       (@arg key: -e --event +takes_value +multiple +required "The event to bind to")
+                    )
                 )
             )
     ).get_matches_from_safe(input)
@@ -128,10 +142,57 @@ fn parse_matches(matches: ArgMatches<'_>) -> PromptResponse {
 
 fn parse_settings_matches<'a>(matches: &ArgMatches<'a>) -> PromptResponse {
     match matches.subcommand() {
-        ("title", _) => PromptResponse::Action(Action::Ui(UiAction::ToggleTitleBar)),
-        ("lines", _) => PromptResponse::Action(Action::Ui(UiAction::ToggleLineNumbers)),
         ("debug", _) => PromptResponse::Action(Action::Ui(UiAction::ShowDebugWidget)),
+        ("config", Some(matches)) => parse_config_matches(matches),
         (cmd, _) => PromptResponse::Message(Message::error(format!("Unknown Settings Command: '{}'", cmd)))
+    }
+}
+
+fn parse_config_matches<'a>(matches: &ArgMatches<'a>) -> PromptResponse {
+    match matches.subcommand() {
+        ("get", Some(matches)) => {
+            let key = matches.value_of("key").unwrap().to_string();
+            PromptResponse::Action(Action::Settings(SettingsAction::Config(ConfigAction::Get(key))))
+        },
+        ("set", Some(matches)) => {
+            let key = matches.value_of("key").unwrap().to_string();
+            let value = matches.value_of("value").unwrap().to_string();
+
+            match serde_json::from_str(&value) {
+                Ok(value) => PromptResponse::Action(Action::Settings(SettingsAction::Config(ConfigAction::Set(key, value)))),
+                Err(err) => PromptResponse::Message(Message::error(format!("{}", err)))
+            }
+        },
+        ("unset", Some(matches)) => {
+            let key = matches.value_of("key").unwrap().to_string();
+            PromptResponse::Action(Action::Settings(SettingsAction::Config(ConfigAction::UnSet(key))))
+        },
+        ("bind", Some(matches)) => {
+            let raw_event = matches.value_of("event").unwrap();
+            if let Some(event) = parse_event(raw_event) {
+                let raw_actions = matches.value_of("actions").unwrap();
+                let actions = raw_actions.split(';');
+                let mut final_actions = vec![];
+                for action in actions {
+                    if let PromptResponse::Action(action) = parse_action(action) {
+                        final_actions.push(action);
+                    }
+                }
+                PromptResponse::Action(Action::Settings(SettingsAction::Config(ConfigAction::Bind(event, final_actions))))
+            } else {
+                PromptResponse::Message(Message::error(format!("Unknown Event: '{}'", raw_event)))
+            }
+        },
+        ("unbind", Some(matches)) => {
+            let raw_event = matches.value_of("event").unwrap();
+            if let Some(event) = parse_event(raw_event) {
+                PromptResponse::Action(Action::Settings(SettingsAction::Config(ConfigAction::UnBind(event))))
+            } else {
+                PromptResponse::Message(Message::error(format!("Unknown Event: '{}'", raw_event)))
+            }
+        },
+        (cmd, _) => PromptResponse::Message(Message::error(format!("Unknown Config Command: '{}'", cmd)))
+
     }
 }
 

@@ -21,7 +21,7 @@ impl Configuration {
         self.data.insert(key.into(), value);
     }
 
-    pub fn remove_config(&mut self, key: &str) -> ConfigResult<()> {
+    pub fn remove_value(&mut self, key: &str) -> ConfigResult<()> {
         if self.data.contains_key(key) {
             self.data.remove(key);
             Ok(())
@@ -48,10 +48,15 @@ impl Configuration {
 
     pub fn get_from_value_default<T: serde::de::DeserializeOwned>(&self, key: &str, value: T) -> T {
         if let Some(val) = self.data.get(key) {
-            if let Ok(fin) = serde_json::from_value::<T>(val.clone()) {
-                return fin;
+            match serde_json::from_value::<T>(val.clone()) {
+                Ok(fin) => fin,
+                Err(err) => {
+                    warn!("Failed to parse json value: {}", err);
+                    value
+                }
             }
+        } else {
+            value
         }
-        value
     }
 }

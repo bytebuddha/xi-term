@@ -1,11 +1,9 @@
-use serde_json::Value;
-
 use std::process::Command;
 
 use super::XiTerm;
 use components::{ Dev, Prompt, EditorResponse, Message };
-use core::{ ActionHandler, consts::{ DEFAULT_DISPLAY_GUTTER, DEFAULT_DISPLAY_TITLE_BAR } };
-use actions::{ Action, SystemAction, UiAction };
+use core::ActionHandler;
+use actions::{ Action, SystemAction, UiAction, SettingsAction, ConfigAction };
 
 impl ActionHandler<Action> for XiTerm {
 
@@ -58,21 +56,43 @@ impl ActionHandler<Action> for XiTerm {
                         }
                     },
                     UiAction::HidePrompt => self.prompt = None,
-                    UiAction::ToggleTitleBar => {
-                        match self.editor.config.get_default("display_title_bar", Value::Bool(DEFAULT_DISPLAY_TITLE_BAR)) {
-                            Value::Bool(true) => self.editor.config.insert_value("display_title_bar", Value::Bool(false)),
-                            Value::Bool(false) => self.editor.config.insert_value("display_title_bar", Value::Bool(true)),
-                            value => warn!("Invalid Value for `display_title_bar`: {:?}", value)
+                }
+            },
+            Action::Settings(action) => {
+                match action {
+                    SettingsAction::Config(action) => match action {
+                        ConfigAction::Set(key, value) => {
+                            self.editor.config.insert_value(&key, value);
+                            self.prompt = None;
+                        },
+                        ConfigAction::UnSet(key) => {
+                            if let Err(err) = self.editor.config.remove_value(&key) {
+                                warn!("Unknown Config Error: {:?}", err);
+                            }
+                        },
+                        ConfigAction::Get(key) => {
+                            if let Ok(value) = self.editor.config.get(&key) {
+                                let mut prompt = Prompt::default();
+                                prompt.set_message(Message::info(format!("Config field: {} = {}", key, value)).title("Config Value"));
+                                self.prompt = Some(prompt);
+                            } else {
+                                let mut prompt = Prompt::default();
+                                prompt.set_message(Message::info(format!("Config field: {} = None", key)).title("Config Value"));
+                                self.prompt = Some(prompt);
+                            }
+                        },
+                        ConfigAction::Bind(event, actions) => {
+                            if let Err(err) = self.actions.insert(event, actions) {
+                                error!("Failed to insert new action binding: {:?}", err)
+                            }
+                            self.prompt = None;
+                        },
+                        ConfigAction::UnBind(event) => {
+                            if let Err(err) = self.actions.remove(event) {
+                                error!("Failed to remove event binding: {:?}", err)
+                            }
+                            self.prompt = None;
                         }
-                        self.prompt = None;
-                    },
-                    UiAction::ToggleLineNumbers => {
-                        match self.editor.config.get_default("display_gutter", Value::Bool(DEFAULT_DISPLAY_GUTTER)) {
-                            Value::Bool(true) => self.editor.config.insert_value("display_gutter", Value::Bool(false)),
-                            Value::Bool(false) => self.editor.config.insert_value("display_gutter", Value::Bool(true)),
-                            value => warn!("Invalid Value for `display_gutter`: {:?}", value)
-                        }
-                        self.prompt = None
                     }
                 }
             }

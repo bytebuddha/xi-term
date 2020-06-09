@@ -4,7 +4,6 @@ pub use self::title_bar::TitleBar;
 mod gutter;
 pub use self::gutter::Gutter;
 
-use serde_json::Value;
 use tui::layout::Rect;
 use tui::buffer::Buffer;
 use tui::widgets::{ Widget, StatefulWidget };
@@ -81,15 +80,14 @@ impl StatefulWidget for EditorWidget {
             TitleBar::new(&state).render(title_bar_rect, buf);
         }
         if let Some(view) = state.views.get_mut(&state.current_view) {
-            let display_gutter = state.config.get_from_value_default("display_gutter", DEFAULT_DISPLAY_GUTTER);
-            let display_title = state.config.get_from_value_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR);
+            let display_gutter = state.config.get_from_value_default::<bool>("display_gutter", DEFAULT_DISPLAY_GUTTER);
+            let display_title = state.config.get_from_value_default::<bool>("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR);
             let view_rect = EditorWidget::calculate_view_rect(display_title, display_gutter, area);
             ViewWidget::new(&state.styles).theme(state.theme.as_ref()).render(view_rect, buf, view);
             view.rect = Some(view_rect);
 
-            if let Value::Bool(true) = state.config.get_default("display_gutter", Value::Bool(DEFAULT_DISPLAY_GUTTER)) {
-                let title_bar = state.config.get_from_value_default("display_title_bar", DEFAULT_DISPLAY_TITLE_BAR);
-                let gutter_rect = self.calculate_gutter_rect(title_bar, area);
+            if display_gutter {
+                let gutter_rect = self.calculate_gutter_rect(display_title, area);
                 Gutter::new(&view).start(view.cache.before()).theme(state.theme.as_ref()).render(gutter_rect, buf);
             }
         }
